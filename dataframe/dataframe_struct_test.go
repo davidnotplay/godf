@@ -1,0 +1,521 @@
+package dataframe
+
+import (
+	"github.com/stretchr/testify/assert"
+	"reflect"
+	"testing"
+)
+
+func Test_dataHasValid_func(t *testing.T) {
+	as := assert.New(t)
+
+	a := [2]int{}
+	sl := []int{}
+
+	as.True(dataHasValidType(a))
+	as.True(dataHasValidType(&a))
+	as.True(dataHasValidType(sl))
+	as.True(dataHasValidType(&sl))
+
+	// invalid types.
+	i := 3
+	ss := "string"
+	b := true
+	st := struct{}{}
+	as.False(dataHasValidType(i))
+	as.False(dataHasValidType(&i))
+	as.False(dataHasValidType(ss))
+	as.False(dataHasValidType(&ss))
+	as.False(dataHasValidType(b))
+	as.False(dataHasValidType(&b))
+	as.False(dataHasValidType(st))
+	as.False(dataHasValidType(&st))
+}
+
+func Test_getStructOfData_func(t *testing.T) {
+	as := assert.New(t)
+	a := [2]struct{ a int }{}
+	s := []struct{ a int }{}
+
+	// array
+	st, err := getStructOfData(a)
+	as.Nil(err)
+	as.Equal(st.NumField(), 1)
+
+	// array ptr
+	st, err = getStructOfData(&a)
+	as.Nil(err)
+	as.Equal(st.NumField(), 1)
+
+	// slice
+	st, err = getStructOfData(s)
+	as.Nil(err, "There an error when is data an array")
+	as.Equal(st.NumField(), 1, "st isn't struct.")
+
+	// slice ptr
+	st, err = getStructOfData(&s)
+	as.Nil(err)
+	as.Equal(st.NumField(), 1, "st isn't struct.")
+}
+
+func Test_getStructOfData_func_Error(t *testing.T) {
+	as := assert.New(t)
+
+	// the param isn't an *array*.
+	i := 3
+	st, err := getStructOfData(i)
+	as.Nil(st)
+	as.Equal(err.Error(), "invalid data type. Valid type: array, array ptr, slice, slice ptr")
+
+	// The array datatype isn't a struct.
+	st, err = getStructOfData([]int{})
+	as.Nil(st)
+	as.Equal(err.Error(), "the data type is not a struct")
+}
+
+func Test_isExportable_func(t *testing.T) {
+	as := assert.New(t)
+	s := struct {
+		a int
+		B int
+	}{}
+
+	st := reflect.TypeOf(s)
+	as.False(isExportableField(st.Field(0)), "the 'a' field isn't exportable")
+	as.True(isExportableField(st.Field(1)), "the 'B' field is exportable")
+}
+
+func Test_parseValue_func(t *testing.T) {
+	as := assert.New(t)
+
+	// base values
+	data := map[columnType] interface{}{
+		INT: 3,
+		UINT: uint(3),
+		FLOAT: 3.2,
+		COMPLEX: 3 + 3i,
+		STRING: "3"}
+	for ct, value := range data {
+		col := columnInfoStruct{columnInfoBase{false, "test", ct}, 0, true}
+		valueObj, err := parseValue(reflect.ValueOf(value), col)
+
+		if err != nil {
+			as.FailNow("there an error in parse value", err.Error())
+			return
+		}
+
+		switch ct {
+		case INT:
+			i, _ := valueObj.Int()
+			as.Equal(value, i, "the value isn't match")
+		case UINT:
+			u, _ := valueObj.Uint()
+			as.Equal(value, u, "the value isn't match")
+		case FLOAT:
+			f, _ := valueObj.Float64()
+			as.Equal(value, f, "the value isn't match")
+		case COMPLEX:
+			c, _ := valueObj.Complex128()
+			as.Equal(value, c, "the value isn't match")
+		case STRING:
+			s, _ := valueObj.String()
+			as.Equal(value, s, "the value isn't match")
+		}
+	}
+
+	// struct values
+	data = map[columnType] interface{}{
+		INT: simpleIntType{3},
+		UINT: simpleUintType{3},
+		FLOAT: simpleFloatType{3.2},
+		COMPLEX: simpleComplexType{3 + 3i},
+		STRING: simpleStringType{"3"}}
+	for ct, value := range data {
+		col := columnInfoStruct{columnInfoBase{false, "test", ct}, 0, false}
+		valueObj, err := parseValue(reflect.ValueOf(value), col)
+
+		if err != nil {
+			as.FailNow("there an error in parse value", err.Error())
+			return
+		}
+
+		switch ct {
+		case INT:
+			i, _ := valueObj.Int64()
+			value := value.(IntType)
+			as.Equal(value.Value(), i, "the value isn't match")
+		case UINT:
+			u, _ := valueObj.Uint64()
+			value := value.(UintType)
+			as.Equal(value.Value(), u, "the value isn't match")
+		case FLOAT:
+			f, _ := valueObj.Float64()
+			value := value.(FloatType)
+			as.Equal(value.Value(), f, "the value isn't match")
+		case COMPLEX:
+			c, _ := valueObj.Complex128()
+			value := value.(ComplexType)
+			as.Equal(value.Value(), c, "the value isn't match")
+		case STRING:
+			s, _ := valueObj.String()
+			value := value.(StringType)
+			as.Equal(value.Value(), s, "the value isn't match")
+		}
+	}
+	/** @TODO testear errores y panic */
+}
+
+func Test_NewDataFrameFromStruct_func_Struct(t *testing.T) {
+	as := assert.New(t)
+	type s struct {
+		a int
+		B int
+		C int16 `colName:"c"`
+		D float32 `colName:"d"`
+		i int
+		T string `colName:"ct"`
+	}
+	data := []s{}
+
+	df, err := NewDataFrameFromStruct(data)
+
+	// Check error
+	if err != nil {
+		as.FailNowf("dataframe error", "function generate the error %s", err.Error())
+		return
+	}
+	as.Nil(err)
+
+	// Check df.columns
+	as.Equal(len(df.columns), 3)
+
+	// Check column 0
+	as.False(df.columns[0].hidden, "the column c is hidden")
+	as.Equal(df.columns[0].name, "c", "the name of the column is c")
+	as.Equal(df.columns[0].ctype, columnType("int"), "c column has an invalid type")
+	as.Equal(df.columns[0].fieldIndex, 2, "the field position in struct is 2")
+
+	// Check column 1
+	as.False(df.columns[1].hidden, "the column d is hidden")
+	as.Equal(df.columns[1].name, "d", "the name of the column is d")
+	as.Equal(df.columns[1].ctype, columnType("float"), "d column has an invalid type")
+	as.Equal(df.columns[1].fieldIndex, 3, "the field position in struct is 2")
+
+	// Check column 2
+	as.False(df.columns[2].hidden, "the column ct is hidden")
+	as.Equal(df.columns[2].name, "ct", "the name of the column is ct")
+	as.Equal(df.columns[2].ctype, columnType("string"), "ct column has an invalid type")
+	as.Equal(df.columns[2].fieldIndex, 5, "the field position in struct is 5")
+
+
+	// Check indexByNamed
+	as.Equal(len(df.cIndexByName), 3, "there are 3 columns, so it must be in map")
+	as.Equal(df.cIndexByName["c"], 0, "the 'c' key is in the 0 position of columns array")
+	as.Equal(df.cIndexByName["d"], 1, "the 'd' key is in the 1 position of columns array")
+	as.Equal(df.cIndexByName["ct"], 2, "the 'ct' key is in the 2 position of columns array")
+}
+
+// Test_NewDataFrameFromStruct_func_ValidParam
+// checks the valid data are array, slice, *array, *slice
+func Test_NewDataFrameFromStruct_func_ValidParam(t *testing.T) {
+	as := assert.New(t)
+
+	// check slice
+	df, err := NewDataFrameFromStruct([]struct{}{})
+	as.NotNil(df, "Only is Nil when there is an error")
+	as.Nil(err, "The error must be Nil")
+
+	// check *slice
+	df, err = NewDataFrameFromStruct(new([]struct{}))
+	as.NotNil(df, "Only is Nil when there is an error")
+	as.Nil(err, "The error must be Nil")
+
+	// check array
+	df, err = NewDataFrameFromStruct([1]struct{}{})
+	as.NotNil(df, "Only is Nil when there is an error")
+	as.Nil(err, "The error must be Nil")
+
+	// check *array
+	df, err = NewDataFrameFromStruct(new([1]struct{}))
+	as.NotNil(df, "Only is Nil when there is an error")
+	as.Nil(err, "The error must be Nil")
+}
+func Test_NewDataFrameFromStruct_func_data(t *testing.T) {
+	as := assert.New(t)
+	data := []struct {
+		A int `colName:"a"`
+		B float32 `colName:"b"`
+		C simpleStringType `colName:"s"`
+	}{
+		{3, 3.2, simpleStringType{"test1"}},
+		{4, 4.2, simpleStringType{"test2"}}}
+
+	df, err := NewDataFrameFromStruct(data)
+
+	if err != nil {
+		as.FailNow("there an error", err.Error())
+	}
+
+	// Row 1
+	// column a
+	v, ok := df.data[0]["a"]
+	if !ok {
+		as.FailNow("error in column a", "column a not found")
+	}
+	i, err := v.Int()
+	if err != nil {
+		as.FailNow("error fetching the value",err.Error())
+	}
+	as.Equal(3, i, "the values doesn't match")
+
+	// column b
+	v, ok = df.data[0]["b"]
+	if !ok {
+		as.FailNow("error in column b", "column b not found")
+	}
+	f, err := v.Float32()
+	if err != nil {
+		as.FailNow("error fetching the value",err.Error())
+	}
+	as.Equal(float32(3.2), f, "the values doesn't match")
+
+	// column c
+	v, ok = df.data[0]["s"]
+	if !ok {
+		as.FailNow("error in column s", "column s not found")
+	}
+	s, err := v.String()
+	if err != nil {
+		as.FailNow("error fetching the value",err.Error())
+	}
+	as.Equal("test1", s, "the values doesn't match")
+
+	// Row 2
+	// column a
+	v, ok = df.data[1]["a"]
+	if !ok {
+		as.FailNow("error in column a", "column a not found")
+	}
+	i, err = v.Int()
+	if err != nil {
+		as.FailNow("error fetching the value",err.Error())
+	}
+	as.Equal(4, i, "the values doesn't match")
+
+	// column b
+	v, ok = df.data[1]["b"]
+	if !ok {
+		as.FailNow("error in column b", "column b not found")
+	}
+	f, err = v.Float32()
+	if err != nil {
+		as.FailNow("error fetching the value",err.Error())
+	}
+	as.Equal(float32(4.2), f, "the values doesn't match")
+
+	// column c
+	v, ok = df.data[1]["s"]
+	if !ok {
+		as.FailNow("error in column s", "column s not found")
+	}
+	s, err = v.String()
+	if err != nil {
+		as.FailNow("error fetching the value",err.Error())
+	}
+	as.Equal("test2", s, "the values doesn't match")
+}
+
+func Test_NewDataFrameFromStruct_func_error(t *testing.T) {
+	as := assert.New(t)
+
+
+	// Invalid param
+	df, err := NewDataFrameFromStruct(3)
+	as.Nil(df, "there an error, the dataframe must be nil")
+	as.Equal("invalid data type. Valid type: array, array ptr, slice, slice ptr",
+		err.Error(), "the error message doesn't match")
+
+	df, err = NewDataFrameFromStruct([]int{3})
+	as.Nil(df, "there an error, the dataframe must be nil")
+	as.Equal("the data type is not a struct", err.Error(), "the error message doesn't match")
+
+	// error in the structs.
+	df, err = NewDataFrameFromStruct([]struct{
+		a int `colName:"a"`
+	}{})
+	as.Nil(df, "there an error, the dataframe must be nil")
+	as.Equal("the column a is unexportable", err.Error(), "the error message doesn't match")
+
+	df, err = NewDataFrameFromStruct([]struct{
+		A int `colName:"a"`
+		B int `colName:"a"`
+	}{})
+	as.Nil(df, "there an error, the dataframe must be nil")
+	as.Equal("the column a is duplicated", err.Error(), "the error message doesn't match")
+
+	// error in the type property of the struct.
+	df, err = NewDataFrameFromStruct([]struct{
+		A bool `colName:"a"`
+	}{})
+	as.Nil(df, "there an error, the dataframe must be nil")
+	as.Equal("in column a: bool type is invalid",
+		err.Error(), "the error message doesn't match")
+
+	// error in the type property of the struct.
+	df, err = NewDataFrameFromStruct([]struct{
+		A struct{} `colName:"a"`
+	}{})
+	as.Nil(df, "there an error, the dataframe must be nil")
+	as.Equal("in column a: type doesn't implements a ValueType",
+		err.Error(), "the error message doesn't match")
+}
+
+func Test_getColumnByName_func(t *testing.T) {
+	as := assert.New(t)
+
+	df, err := NewDataFrameFromStruct([]struct{
+		A int `colName:"a"`
+		a int
+		B float64 `colName:"b"`
+		C string `colName:"c"`}{})
+
+	if err != nil {
+		as.FailNowf("there an error creating the DataFrame", err.Error())
+		return
+	}
+
+	col, exists := df.getColumnByName("a")
+	as.True(exists, "column a not found")
+	as.Equal("a", col.name, "The column fetched is invalid")
+
+	col, exists = df.getColumnByName("b")
+	as.True(exists, "column b not found")
+	as.Equal("b", col.name, "The column fetched is invalid")
+
+	col, exists = df.getColumnByName("c")
+	as.True(exists, "column c not found")
+	as.Equal("c", col.name, "The column fetched is invalid")
+
+	// column not found:
+	col, exists = df.getColumnByName("d")
+	as.Nil(col, "column d isn't exists, but the function returned data")
+	as.False(exists, "the column d isn't exists, but the function returned the column exists.")
+}
+
+func Test_ShowAllColumns_func(t *testing.T) {
+	as := assert.New(t)
+	df, _ := NewDataFrameFromStruct([]struct{
+		A int `colName:"a"`
+		a int
+		B float64 `colName:"b"`
+		C string `colName:"c"`}{})
+
+	// First hide all columns
+	for i, _ := range df.columns {
+		df.columns[i].hidden = true
+	}
+
+	df.ShowAllColumns()
+	for _, col := range df.columns {
+		as.Falsef(col.hidden, "the column %s is hidden", col.name)
+	}
+}
+
+func Test_HideAllColumns_func(t *testing.T) {
+	as := assert.New(t)
+	df, _ := NewDataFrameFromStruct([]struct{
+		A int `colName:"a"`
+		a int
+		B float64 `colName:"b"`
+		C string `colName:"c"`}{})
+
+	// First show all columns
+	for i, _ := range df.columns {
+		df.columns[i].hidden = false
+	}
+
+	df.HideAllColumns()
+	for _, col := range df.columns {
+		as.Truef(col.hidden, "the column %s is visible", col.name)
+	}
+}
+
+func Test_ShowColumns_func(t *testing.T) {
+	as := assert.New(t)
+	df, _ := NewDataFrameFromStruct([]struct{
+		A int `colName:"a"`
+		a int
+		B float64 `colName:"b"`
+		C string `colName:"c"`}{})
+	results := map[string]bool {
+		"a": false,
+		"b": true,
+		"c": false}
+
+	df.HideAllColumns()
+	err := df.ShowColumns("a", "c")
+	if err != nil {
+		as.FailNow("the function has generated an error", err.Error())
+	}
+
+	for _, col := range df.columns {
+		as.Equalf(results[col.name], col.hidden,
+			"the column %s is hidden: %s", col.name, results[col.name])
+	}
+
+	// show columns error
+	err = df.ShowColumns("r")
+	as.Equal("the column r doesn't exists", err.Error(), "the error message doesn't match")
+}
+
+func Test_HiddenColumns_func(t *testing.T) {
+	as := assert.New(t)
+	df, _ := NewDataFrameFromStruct([]struct{
+		A int `colName:"a"`
+		a int
+		B float64 `colName:"b"`
+		C string `colName:"c"`}{})
+	results := map[string]bool {
+		"a": true,
+		"b": true,
+		"c": false}
+
+	df.ShowAllColumns()
+	err := df.HideColumns("a", "b")
+	if err != nil {
+		as.FailNow("the function has generated an error", err.Error())
+	}
+
+	for _, col := range df.columns {
+		as.Equalf(results[col.name], col.hidden,
+			"the column %s is hidden: %s", col.name, results[col.name])
+	}
+
+
+	// hidden columns error
+	err = df.HideColumns("r")
+	as.Equal("the column r doesn't exists", err.Error(), "the error message doesn't match")
+}
+
+func Test_Header_func(t *testing.T) {
+	as := assert.New(t)
+	df, _ := NewDataFrameFromStruct([]struct{
+		A int `colName:"a"`
+		a int
+		B float64 `colName:"b"`
+		C string `colName:"c"`}{})
+
+	headers := df.Headers()
+	results := []string{"a", "b", "c"}
+	for _, result := range results {
+		as.Containsf(headers, result, "The %s header isn't exists", result)
+	}
+
+	// Fetch the headers after hide the column b
+	df.HideColumns("b")
+	headers = df.Headers()
+	results = []string{"a", "c"}
+	for _, result := range results {
+		as.Containsf(headers, result, "The %s header isn't exists", result)
+	}
+}
