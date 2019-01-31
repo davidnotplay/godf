@@ -4,16 +4,11 @@ import (
 	"fmt"
 	"reflect"
 )
-type columnInfoStruct struct {
-	columnInfoBase
-	fieldIndex int
-	basicType bool
-}
 
 type dataFrameStruct struct {
 	dataFrameBase
 	cIndexByName map[string]int
-	columns	     []columnInfoStruct
+	columns	     []column
 	data         []map[string]Value
 }
 
@@ -76,7 +71,7 @@ func isExportableField(sf reflect.StructField) bool {
 // parseValue transforms fieldv in a value Type (IntType, FloatType...),
 // it stores the value transformed  in a Value struct and returns the Value struct.
 // The `col` param has info to transforms the fieldv in a Value struct.
-func parseValue(fieldv reflect.Value, col columnInfoStruct) (*Value, error) {
+func parseValue(fieldv reflect.Value, col column) (*Value, error) {
 	var (
 		value *Value
 		err error
@@ -123,15 +118,15 @@ func NewDataFrameFromStruct(data interface{}) (*dataFrameStruct, error) {
 
 	var exists bool
 	df := dataFrameStruct{}
-	df.columns = []columnInfoStruct{}
+	df.columns = []column{}
 	df.cIndexByName = map[string]int{}
 
 	// Generate the columns using the struct field tags.
 	for i := 0; i < dt.NumField(); i++ {
-		c := columnInfoStruct{}
+		c := column{}
 		field := dt.Field(i)
 		fieldtag := field.Tag
-		c.fieldIndex = i
+		c.index = i
 
 		if c.name, exists = fieldtag.Lookup("colName"); !exists {
 			// Whether field hasn't colName tag, then it won't add to the dataframe.
@@ -168,7 +163,7 @@ func NewDataFrameFromStruct(data interface{}) (*dataFrameStruct, error) {
 		valuesRow := map[string]Value{}
 
 		for _, col := range df.columns {
-			value, _ := parseValue(rowSt.Field(col.fieldIndex), col)
+			value, _ := parseValue(rowSt.Field(col.index), col)
 			valuesRow[col.name] = *value
 		}
 
@@ -181,7 +176,7 @@ func NewDataFrameFromStruct(data interface{}) (*dataFrameStruct, error) {
 // getColumnByName function returns the DataFrame column that his name
 // match with the `coln` param. The second param returned is a flag
 // indicating if the column `coln` exists in DataFrame.
-func (df *dataFrameStruct)getColumnByName(coln string) (*columnInfoStruct, bool) {
+func (df *dataFrameStruct)getColumnByName(coln string) (*column, bool) {
 	pos, exists := df.cIndexByName[coln]
 
 	if !exists {

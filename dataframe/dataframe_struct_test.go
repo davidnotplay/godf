@@ -96,7 +96,7 @@ func Test_parseValue_func(t *testing.T) {
 		COMPLEX: 3 + 3i,
 		STRING: "3"}
 	for ct, value := range data {
-		col := columnInfoStruct{columnInfoBase{false, "test", ct}, 0, true}
+		col := column{false, "test", ct, 0, true}
 		valueObj, err := parseValue(reflect.ValueOf(value), col)
 
 		if err != nil {
@@ -131,7 +131,7 @@ func Test_parseValue_func(t *testing.T) {
 		COMPLEX: simpleComplexType{3 + 3i},
 		STRING: simpleStringType{"3"}}
 	for ct, value := range data {
-		col := columnInfoStruct{columnInfoBase{false, "test", ct}, 0, false}
+		col := column{false, "test", ct, 0, false}
 		valueObj, err := parseValue(reflect.ValueOf(value), col)
 
 		if err != nil {
@@ -193,19 +193,19 @@ func Test_NewDataFrameFromStruct_func_Struct(t *testing.T) {
 	as.False(df.columns[0].hidden, "the column c is hidden")
 	as.Equal(df.columns[0].name, "c", "the name of the column is c")
 	as.Equal(df.columns[0].ctype, columnType("int"), "c column has an invalid type")
-	as.Equal(df.columns[0].fieldIndex, 2, "the field position in struct is 2")
+	as.Equal(df.columns[0].index, 2, "the field position in struct is 2")
 
 	// Check column 1
 	as.False(df.columns[1].hidden, "the column d is hidden")
 	as.Equal(df.columns[1].name, "d", "the name of the column is d")
 	as.Equal(df.columns[1].ctype, columnType("float"), "d column has an invalid type")
-	as.Equal(df.columns[1].fieldIndex, 3, "the field position in struct is 2")
+	as.Equal(df.columns[1].index, 3, "the field position in struct is 2")
 
 	// Check column 2
 	as.False(df.columns[2].hidden, "the column ct is hidden")
 	as.Equal(df.columns[2].name, "ct", "the name of the column is ct")
 	as.Equal(df.columns[2].ctype, columnType("string"), "ct column has an invalid type")
-	as.Equal(df.columns[2].fieldIndex, 5, "the field position in struct is 5")
+	as.Equal(df.columns[2].index, 5, "the field position in struct is 5")
 
 
 	// Check indexByNamed
