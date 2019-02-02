@@ -62,7 +62,7 @@ func isExportableField(sf reflect.StructField) bool {
 }
 
 /**
-	@TODO comentar función
+@TODO comentar función
 */
 func NewDataFrameFromStruct(data interface{}) (*DataFrame, error) {
 	dt, err := getStructOfData(data)
@@ -92,7 +92,6 @@ func NewDataFrameFromStruct(data interface{}) (*DataFrame, error) {
 			return nil, fmt.Errorf("the column %s is unexportable", c.name)
 		}
 
-
 		if _, exists = df.cIndexByName[c.name]; exists {
 			return nil, fmt.Errorf("the column %s is duplicated", c.name)
 		}
@@ -113,14 +112,14 @@ func NewDataFrameFromStruct(data interface{}) (*DataFrame, error) {
 
 type dataHandlerStruct struct {
 	dataframe *DataFrame
-	data	  []map[string]Value
-	order	  []int
+	data      []map[string]Value
+	order     []int
 }
 
 // makeRange makes an slice of consecutive numbers from min param to max param;
 // both numbers included.
-func makeRange(min, max int) []int{
-	r := make([]int, max - min + 1)
+func makeRange(min, max int) []int {
+	r := make([]int, max-min+1)
 
 	for i := range r {
 		r[i] = min + i
@@ -135,7 +134,7 @@ func makeRange(min, max int) []int{
 func parseValue(fieldv reflect.Value, col column) (*Value, error) {
 	var (
 		value *Value
-		err error
+		err   error
 	)
 
 	// fieldv should be a basic type (int, uint, float...)
@@ -169,7 +168,7 @@ func parseValue(fieldv reflect.Value, col column) (*Value, error) {
 
 // newDataHandlerStruct func makes a new dataHandlerStruct using the *in* arguments as
 // struct field.
-func newDataHandlerStruct(df *DataFrame, data interface{})(*dataHandlerStruct, error){
+func newDataHandlerStruct(df *DataFrame, data interface{}) (*dataHandlerStruct, error) {
 	dv := reflect.ValueOf(data)
 	dh := dataHandlerStruct{}
 	dh.dataframe = df
@@ -190,6 +189,6 @@ func newDataHandlerStruct(df *DataFrame, data interface{})(*dataHandlerStruct, e
 		dh.data = append(dh.data, valuesRow)
 	}
 
-	dh.order = makeRange(0, len(dh.data) - 1)
+	dh.order = makeRange(0, len(dh.data)-1)
 	return &dh, nil
 }

@@ -18,7 +18,7 @@ const (
 
 // getColumnTypeFromString returns one of the columnType constant.
 // Whether `str` param isn't match with any columnType returns an error.
-func getColumnTypeFromString(str string) (columnType, error){
+func getColumnTypeFromString(str string) (columnType, error) {
 	coltype := columnType(str)
 
 	switch coltype {
@@ -42,11 +42,11 @@ func getColumnTypeFromType(t reflect.Type) (columnType, bool, error) {
 	k := t.Kind()
 
 	// The type is a ptr. Check then the ptr element.
-	if (k == reflect.Ptr) {
+	if k == reflect.Ptr {
 		return getColumnTypeFromType(t.Elem())
 	}
 
-	if (k == reflect.Struct || k == reflect.Interface) {
+	if k == reflect.Struct || k == reflect.Interface {
 		// check if t implements some of the ValuesType
 		if t.Implements(reflect.TypeOf((*IntType)(nil)).Elem()) {
 			return INT, false, nil
@@ -86,7 +86,7 @@ func getColumnTypeFromType(t reflect.Type) (columnType, bool, error) {
 
 // Kind returns the Kind type associate to the columnType constants.
 // If columnType isn't one of the constants then the function throw a panic message.
-func (c columnType)Kind() reflect.Kind {
+func (c columnType) Kind() reflect.Kind {
 	switch c {
 	case INT:
 		return reflect.Int
@@ -105,9 +105,9 @@ func (c columnType)Kind() reflect.Kind {
 
 type column struct {
 	// flag indicating if the column is hidde for the operations.
-	hidden  bool
+	hidden bool
 	// column name
-	name    string
+	name string
 	// Column type
 	ctype columnType
 	// column position in dataframe

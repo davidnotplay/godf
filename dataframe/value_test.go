@@ -6,7 +6,6 @@ import (
 	"testing"
 )
 
-
 func Test_simpleIntType_struct(t *testing.T) {
 	as := assert.New(t)
 	var i IntType = simpleIntType{v: 1000}
@@ -69,24 +68,23 @@ func Test_simpleComplexType_struct(t *testing.T) {
 		c.String(),
 		"in String func, the str returned isn't match to the value")
 
-
 	// Compare function
-	as.Equal(EQUAL, c.Compare(100 + 10i), "in Compare func, value is equal than the param")
+	as.Equal(EQUAL, c.Compare(100+10i), "in Compare func, value is equal than the param")
 
 	// real part
 	as.Equal(LESS,
-		c.Compare(101 + 10i),
+		c.Compare(101+10i),
 		"in Compare func, the real part of value is less than the real part of param")
 	as.Equal(GREAT,
-		c.Compare(99 + 10i),
+		c.Compare(99+10i),
 		"in Compare func, the real part of value is great than the real part of param")
 
 	// Imaginary part.
 	as.Equal(LESS,
-		c.Compare(100 + 11i),
+		c.Compare(100+11i),
 		"in Compare func, the imag. part of value is less than the imag. part of param")
 	as.Equal(GREAT,
-		c.Compare(100 + 9i),
+		c.Compare(100+9i),
 		"in Compare func, the imag. part of value is great than the imag. part of param")
 
 }
@@ -100,7 +98,6 @@ func Test_simpleStringType_struct(t *testing.T) {
 
 	// String function
 	as.Equal("test", s.String(), "in String func, the str returned isn't match to the value")
-
 
 	// Compare function
 	as.Equal(EQUAL, s.Compare("test"), "in Compare func, value is equal than the param")
@@ -158,11 +155,11 @@ func Test_checkType_func(t *testing.T) {
 
 	// valid values.
 	values := map[reflect.Kind]interface{}{
-		reflect.Int: simpleIntType{1},
-		reflect.Uint: simpleUintType{1},
-		reflect.Float64: simpleFloatType{1},
-		reflect.Complex128: simpleComplexType{1 +0i},
-		reflect.String: simpleStringType{"test"}}
+		reflect.Int:        simpleIntType{1},
+		reflect.Uint:       simpleUintType{1},
+		reflect.Float64:    simpleFloatType{1},
+		reflect.Complex128: simpleComplexType{1 + 0i},
+		reflect.String:     simpleStringType{"test"}}
 
 	for t, v := range values {
 		value, _ := newValue(v)
@@ -170,18 +167,17 @@ func Test_checkType_func(t *testing.T) {
 	}
 
 	// invalid values
-	values = map[reflect.Kind]interface{} {
-		reflect.Int: simpleUintType{1},
-		reflect.Uint: simpleFloatType{1},
-		reflect.Float64: simpleComplexType{1},
+	values = map[reflect.Kind]interface{}{
+		reflect.Int:        simpleUintType{1},
+		reflect.Uint:       simpleFloatType{1},
+		reflect.Float64:    simpleComplexType{1},
 		reflect.Complex128: simpleStringType{"test"},
-		reflect.String: simpleIntType{3}}
+		reflect.String:     simpleIntType{3}}
 
 	for t, v := range values {
 		value, _ := newValue(v)
 		as.Falsef(value.checkType(t), "the type %s is match with the value", t.String())
 	}
-
 
 	// panic function
 	value := Value{3}
@@ -203,7 +199,6 @@ func Test_toInt_func(t *testing.T) {
 	i, err := v.toInt()
 	as.Nil(err, "there is an error fetching the integer data")
 	as.Equal(int64(3), i, "the number returned isn't match")
-
 
 	// Error transforming the value in int.
 	v, _ = newValue(simpleFloatType{3})
@@ -241,7 +236,6 @@ func Test_toUint_func(t *testing.T) {
 	as.Nil(err, "there is an error fetching the integer data")
 	as.Equal(uint64(3), u, "the number returned isn't match")
 
-
 	// Error transforming the value in int.
 	v, _ = newValue(simpleFloatType{3})
 	u, err = v.toUint()
@@ -278,7 +272,6 @@ func Test_toFloat_func(t *testing.T) {
 	as.Nil(err, "there is an error fetching the integer data")
 	as.Equal(float64(3), f, "the number returned isn't match")
 
-
 	// Error transforming the value in int.
 	v, _ = newValue(simpleUintType{3})
 	f, err = v.toFloat()
@@ -304,8 +297,7 @@ func Test_toComplex_func(t *testing.T) {
 	v, _ := newValue(simpleComplexType{3 + 3i})
 	c, err := v.toComplex()
 	as.Nil(err, "there is an error fetching the integer data")
-	as.Equal(3 + 3i, c, "the number returned isn't match")
-
+	as.Equal(3+3i, c, "the number returned isn't match")
 
 	// Error transforming the value in int.
 	v, _ = newValue(simpleUintType{3})
@@ -319,10 +311,10 @@ func Test_ComplexX_func(t *testing.T) {
 	v, _ := newValue(simpleComplexType{3 - 10i})
 
 	r1, _ := v.Complex128()
-	as.Equal(complex128(3 -10i), r1, "the value returned isn't match")
+	as.Equal(complex128(3-10i), r1, "the value returned isn't match")
 
 	r2, _ := v.Complex64()
-	as.Equal(complex64(3 -10i), r2, "the value returned isn't match")
+	as.Equal(complex64(3-10i), r2, "the value returned isn't match")
 }
 
 func Test_String_func(t *testing.T) {
@@ -334,11 +326,9 @@ func Test_String_func(t *testing.T) {
 	as.Nil(err, "there is an error fetching the integer data")
 	as.Equal("test", s, "the number returned isn't match")
 
-
 	// Error transforming the value in int.
 	v, _ = newValue(simpleUintType{3})
 	s, err = v.String()
 	as.Equal("", s, "the value must be 0 when there is an error")
 	as.Equal("value isn't type string", err.Error(), "the error message isn't match")
 }
-

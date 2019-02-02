@@ -8,11 +8,12 @@ import (
 func Test_getColumnByName_func(t *testing.T) {
 	as := assert.New(t)
 
-	df, err := NewDataFrameFromStruct([]struct{
+	df, err := NewDataFrameFromStruct([]struct {
 		A int `colName:"a"`
 		a int
 		B float64 `colName:"b"`
-		C string `colName:"c"`}{})
+		C string  `colName:"c"`
+	}{})
 
 	if err != nil {
 		as.FailNowf("there an error creating the DataFrame", err.Error())
@@ -39,11 +40,12 @@ func Test_getColumnByName_func(t *testing.T) {
 
 func Test_ShowAllColumns_func(t *testing.T) {
 	as := assert.New(t)
-	df, _ := NewDataFrameFromStruct([]struct{
+	df, _ := NewDataFrameFromStruct([]struct {
 		A int `colName:"a"`
 		a int
 		B float64 `colName:"b"`
-		C string `colName:"c"`}{})
+		C string  `colName:"c"`
+	}{})
 
 	// First hide all columns
 	for i, _ := range df.columns {
@@ -58,11 +60,12 @@ func Test_ShowAllColumns_func(t *testing.T) {
 
 func Test_HideAllColumns_func(t *testing.T) {
 	as := assert.New(t)
-	df, _ := NewDataFrameFromStruct([]struct{
+	df, _ := NewDataFrameFromStruct([]struct {
 		A int `colName:"a"`
 		a int
 		B float64 `colName:"b"`
-		C string `colName:"c"`}{})
+		C string  `colName:"c"`
+	}{})
 
 	// First show all columns
 	for i, _ := range df.columns {
@@ -77,12 +80,13 @@ func Test_HideAllColumns_func(t *testing.T) {
 
 func Test_ShowColumns_func(t *testing.T) {
 	as := assert.New(t)
-	df, _ := NewDataFrameFromStruct([]struct{
+	df, _ := NewDataFrameFromStruct([]struct {
 		A int `colName:"a"`
 		a int
 		B float64 `colName:"b"`
-		C string `colName:"c"`}{})
-	results := map[string]bool {
+		C string  `colName:"c"`
+	}{})
+	results := map[string]bool{
 		"a": false,
 		"b": true,
 		"c": false}
@@ -105,12 +109,13 @@ func Test_ShowColumns_func(t *testing.T) {
 
 func Test_HiddenColumns_func(t *testing.T) {
 	as := assert.New(t)
-	df, _ := NewDataFrameFromStruct([]struct{
+	df, _ := NewDataFrameFromStruct([]struct {
 		A int `colName:"a"`
 		a int
 		B float64 `colName:"b"`
-		C string `colName:"c"`}{})
-	results := map[string]bool {
+		C string  `colName:"c"`
+	}{})
+	results := map[string]bool{
 		"a": true,
 		"b": true,
 		"c": false}
@@ -126,7 +131,6 @@ func Test_HiddenColumns_func(t *testing.T) {
 			"the column %s is hidden: %s", col.name, results[col.name])
 	}
 
-
 	// hidden columns error
 	err = df.HideColumns("r")
 	as.Equal("the column r doesn't exists", err.Error(), "the error message doesn't match")
@@ -134,11 +138,12 @@ func Test_HiddenColumns_func(t *testing.T) {
 
 func Test_Header_func(t *testing.T) {
 	as := assert.New(t)
-	df, _ := NewDataFrameFromStruct([]struct{
+	df, _ := NewDataFrameFromStruct([]struct {
 		A int `colName:"a"`
 		a int
 		B float64 `colName:"b"`
-		C string `colName:"c"`}{})
+		C string  `colName:"c"`
+	}{})
 
 	headers := df.Headers()
 	results := []string{"a", "b", "c"}

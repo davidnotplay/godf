@@ -37,7 +37,7 @@ func Test_getColumnTypeFromKind_func(t *testing.T) {
 		FLOAT: {float64(100), float32(100),
 			new(float64), new(float32)},
 		COMPLEX: {complex128(100), complex64(100), new(complex128), new(complex64)},
-		STRING: {"test", new(string)}}
+		STRING:  {"test", new(string)}}
 
 	for c, arr := range types {
 		for _, t := range arr {
@@ -56,12 +56,12 @@ func Test_getColumnTypeFromKind_func(t *testing.T) {
 	as.Equal("bool type is invalid", err.Error(), "The error messages don't match")
 
 	// Custom values.
-	ctypes := map[columnType]interface{} {
-		INT: simpleIntType{3},
-		UINT: simpleUintType{3},
-		FLOAT: simpleFloatType{3},
+	ctypes := map[columnType]interface{}{
+		INT:     simpleIntType{3},
+		UINT:    simpleUintType{3},
+		FLOAT:   simpleFloatType{3},
 		COMPLEX: simpleComplexType{3},
-		STRING: simpleStringType{"test"}}
+		STRING:  simpleStringType{"test"}}
 
 	for c, elem := range ctypes {
 		ct, baseType, err := getColumnTypeFromType(reflect.TypeOf(elem))
@@ -84,11 +84,11 @@ func Test_getColumnTypeFromKind_func(t *testing.T) {
 func Test_Kind_func(t *testing.T) {
 	as := assert.New(t)
 	types := map[string]reflect.Kind{
-		"int": reflect.Int,
-		"uint": reflect.Uint,
-		"float": reflect.Float64,
+		"int":     reflect.Int,
+		"uint":    reflect.Uint,
+		"float":   reflect.Float64,
 		"complex": reflect.Complex128,
-		"string": reflect.String}
+		"string":  reflect.String}
 
 	for strType, ktype := range types {
 		ty, _ := getColumnTypeFromString(strType)
@@ -100,4 +100,3 @@ func Test_Kind_func(t *testing.T) {
 	panicf := func() { ty.Kind() }
 	as.PanicsWithValue("invalid column type", panicf, "panic message isn't  match")
 }
-

@@ -90,7 +90,7 @@ func Test_NewDataFrameFromStruct_func_Struct(t *testing.T) {
 	type s struct {
 		a int
 		B int
-		C int16 `colName:"c"`
+		C int16   `colName:"c"`
 		D float32 `colName:"d"`
 		i int
 		T string `colName:"ct"`
@@ -127,7 +127,6 @@ func Test_NewDataFrameFromStruct_func_Struct(t *testing.T) {
 	as.Equal(df.columns[2].ctype, columnType("string"), "ct column has an invalid type")
 	as.Equal(df.columns[2].index, 5, "the field position in struct is 5")
 
-
 	// Check indexByNamed
 	as.Equal(len(df.cIndexByName), 3, "there are 3 columns, so it must be in map")
 	as.Equal(df.cIndexByName["c"], 0, "the 'c' key is in the 0 position of columns array")
@@ -162,7 +161,6 @@ func Test_NewDataFrameFromStruct_func_ValidParam(t *testing.T) {
 func Test_NewDataFrameFromStruct_func_error(t *testing.T) {
 	as := assert.New(t)
 
-
 	// Invalid param
 	df, err := NewDataFrameFromStruct(3)
 	as.Nil(df, "there an error, the dataframe must be nil")
@@ -174,13 +172,13 @@ func Test_NewDataFrameFromStruct_func_error(t *testing.T) {
 	as.Equal("the data type is not a struct", err.Error(), "the error message doesn't match")
 
 	// error in the structs.
-	df, err = NewDataFrameFromStruct([]struct{
+	df, err = NewDataFrameFromStruct([]struct {
 		a int `colName:"a"`
 	}{})
 	as.Nil(df, "there an error, the dataframe must be nil")
 	as.Equal("the column a is unexportable", err.Error(), "the error message doesn't match")
 
-	df, err = NewDataFrameFromStruct([]struct{
+	df, err = NewDataFrameFromStruct([]struct {
 		A int `colName:"a"`
 		B int `colName:"a"`
 	}{})
@@ -188,7 +186,7 @@ func Test_NewDataFrameFromStruct_func_error(t *testing.T) {
 	as.Equal("the column a is duplicated", err.Error(), "the error message doesn't match")
 
 	// error in the type property of the struct.
-	df, err = NewDataFrameFromStruct([]struct{
+	df, err = NewDataFrameFromStruct([]struct {
 		A bool `colName:"a"`
 	}{})
 	as.Nil(df, "there an error, the dataframe must be nil")
@@ -196,7 +194,7 @@ func Test_NewDataFrameFromStruct_func_error(t *testing.T) {
 		err.Error(), "the error message doesn't match")
 
 	// error in the type property of the struct.
-	df, err = NewDataFrameFromStruct([]struct{
+	df, err = NewDataFrameFromStruct([]struct {
 		A struct{} `colName:"a"`
 	}{})
 	as.Nil(df, "there an error, the dataframe must be nil")
@@ -208,12 +206,12 @@ func Test_parseValue_func(t *testing.T) {
 	as := assert.New(t)
 
 	// base values
-	data := map[columnType] interface{}{
-		INT: 3,
-		UINT: uint(3),
-		FLOAT: 3.2,
+	data := map[columnType]interface{}{
+		INT:     3,
+		UINT:    uint(3),
+		FLOAT:   3.2,
 		COMPLEX: 3 + 3i,
-		STRING: "3"}
+		STRING:  "3"}
 	for ct, value := range data {
 		col := column{false, "test", ct, 0, true}
 		valueObj, err := parseValue(reflect.ValueOf(value), col)
@@ -243,12 +241,12 @@ func Test_parseValue_func(t *testing.T) {
 	}
 
 	// struct values
-	data = map[columnType] interface{}{
-		INT: simpleIntType{3},
-		UINT: simpleUintType{3},
-		FLOAT: simpleFloatType{3.2},
+	data = map[columnType]interface{}{
+		INT:     simpleIntType{3},
+		UINT:    simpleUintType{3},
+		FLOAT:   simpleFloatType{3.2},
 		COMPLEX: simpleComplexType{3 + 3i},
-		STRING: simpleStringType{"3"}}
+		STRING:  simpleStringType{"3"}}
 	for ct, value := range data {
 		col := column{false, "test", ct, 0, false}
 		valueObj, err := parseValue(reflect.ValueOf(value), col)
@@ -307,8 +305,8 @@ func Test_makeRange(t *testing.T) {
 func Test_NewDataFrameFromStruct_func_dataHandler(t *testing.T) {
 	as := assert.New(t)
 	data := []struct {
-		A int `colName:"a"`
-		B float32 `colName:"b"`
+		A int              `colName:"a"`
+		B float32          `colName:"b"`
 		C simpleStringType `colName:"s"`
 	}{
 		{3, 3.2, simpleStringType{"test1"}},
@@ -327,7 +325,7 @@ func Test_NewDataFrameFromStruct_func_dataHandler(t *testing.T) {
 	}
 	i, err := v.Int()
 	if err != nil {
-		as.FailNow("error fetching the value",err.Error())
+		as.FailNow("error fetching the value", err.Error())
 	}
 	as.Equal(3, i, "the values doesn't match")
 
@@ -338,7 +336,7 @@ func Test_NewDataFrameFromStruct_func_dataHandler(t *testing.T) {
 	}
 	f, err := v.Float32()
 	if err != nil {
-		as.FailNow("error fetching the value",err.Error())
+		as.FailNow("error fetching the value", err.Error())
 	}
 	as.Equal(float32(3.2), f, "the values doesn't match")
 
@@ -349,7 +347,7 @@ func Test_NewDataFrameFromStruct_func_dataHandler(t *testing.T) {
 	}
 	s, err := v.String()
 	if err != nil {
-		as.FailNow("error fetching the value",err.Error())
+		as.FailNow("error fetching the value", err.Error())
 	}
 	as.Equal("test1", s, "the values doesn't match")
 
@@ -360,7 +358,7 @@ func Test_NewDataFrameFromStruct_func_dataHandler(t *testing.T) {
 	}
 	i, err = v.Int()
 	if err != nil {
-		as.FailNow("error fetching the value",err.Error())
+		as.FailNow("error fetching the value", err.Error())
 	}
 	as.Equal(4, i, "the values doesn't match")
 
@@ -371,7 +369,7 @@ func Test_NewDataFrameFromStruct_func_dataHandler(t *testing.T) {
 	}
 	f, err = v.Float32()
 	if err != nil {
-		as.FailNow("error fetching the value",err.Error())
+		as.FailNow("error fetching the value", err.Error())
 	}
 	as.Equal(float32(4.2), f, "the values doesn't match")
 
@@ -382,7 +380,7 @@ func Test_NewDataFrameFromStruct_func_dataHandler(t *testing.T) {
 	}
 	s, err = v.String()
 	if err != nil {
-		as.FailNow("error fetching the value",err.Error())
+		as.FailNow("error fetching the value", err.Error())
 	}
 	as.Equal("test2", s, "the values doesn't match")
 
@@ -394,4 +392,3 @@ func Test_NewDataFrameFromStruct_func_dataHandler(t *testing.T) {
 	// check if dataframehandler has the dataframe as field. // check memory address.
 	as.Equal(df, df.handler.dataframe, "the memory address is different")
 }
-

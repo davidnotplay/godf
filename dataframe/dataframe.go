@@ -6,14 +6,14 @@ import (
 
 type DataFrame struct {
 	cIndexByName map[string]int
-	columns	     []column
-	handler	     *dataHandlerStruct
+	columns      []column
+	handler      *dataHandlerStruct
 }
 
 // getColumnByName function returns the DataFrame column that his name
 // match with the `coln` param. The second param returned is a flag
 // indicating if the column `coln` exists in DataFrame.
-func (df *DataFrame)getColumnByName(coln string) (*column, bool) {
+func (df *DataFrame) getColumnByName(coln string) (*column, bool) {
 	pos, exists := df.cIndexByName[coln]
 
 	if !exists {
@@ -24,28 +24,28 @@ func (df *DataFrame)getColumnByName(coln string) (*column, bool) {
 }
 
 //ShowAllColumns func shows all dataframe columns.
-func (df *DataFrame)ShowAllColumns() {
-	for i, _ := range  df.columns {
+func (df *DataFrame) ShowAllColumns() {
+	for i, _ := range df.columns {
 		df.columns[i].hidden = false
 	}
 }
 
 // HideAllColumns func hides all dataframe columns
-func (df *DataFrame)HideAllColumns() {
-	for i, _ := range  df.columns {
+func (df *DataFrame) HideAllColumns() {
+	for i, _ := range df.columns {
 		df.columns[i].hidden = true
 	}
 }
 
 // ShowColumns show the columns of the arguments.
 // If one column of the argument doesn't exists, then returns an error.
-func (df *DataFrame)ShowColumns(columns ...string) error {
+func (df *DataFrame) ShowColumns(columns ...string) error {
 	df.HideAllColumns()
 
 	for _, colname := range columns {
 		col, exists := df.getColumnByName(colname)
 
-		if ! exists {
+		if !exists {
 			return fmt.Errorf("the column %s doesn't exists", colname)
 		}
 
@@ -57,13 +57,13 @@ func (df *DataFrame)ShowColumns(columns ...string) error {
 
 // HideColumns hide columns of the arguments.
 // If one column of the argument doesn't exists, then returns an error.
-func (df *DataFrame)HideColumns(columns ...string) error {
+func (df *DataFrame) HideColumns(columns ...string) error {
 	df.ShowAllColumns()
 
 	for _, colname := range columns {
 		col, exists := df.getColumnByName(colname)
 
-		if ! exists {
+		if !exists {
 			return fmt.Errorf("the column %s doesn't exists", colname)
 		}
 
@@ -75,7 +75,7 @@ func (df *DataFrame)HideColumns(columns ...string) error {
 
 // Headers returns the columns header of dataframe.
 // the columns hidden are ignored.
-func (df *DataFrame)Headers() []string {
+func (df *DataFrame) Headers() []string {
 	header := []string{}
 	for _, col := range df.columns {
 		if !col.hidden {
@@ -85,4 +85,3 @@ func (df *DataFrame)Headers() []string {
 
 	return header
 }
-
