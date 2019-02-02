@@ -112,5 +112,6 @@ type column struct {
 	ctype columnType
 	// column position in dataframe
 	index int
+	// flag indicating if is a basic type.
 	basicType bool
 }

@@ -5,13 +5,6 @@ import (
 	"reflect"
 )
 
-type dataFrameStruct struct {
-	dataFrameBase
-	cIndexByName map[string]int
-	columns	     []column
-	data         []map[string]Value
-}
-
 // dataHasValidType check if `data` is:
 //	- array
 //	- slice
@@ -68,48 +61,10 @@ func isExportableField(sf reflect.StructField) bool {
 	return sf.PkgPath == ""
 }
 
-// parseValue transforms fieldv in a value Type (IntType, FloatType...),
-// it stores the value transformed  in a Value struct and returns the Value struct.
-// The `col` param has info to transforms the fieldv in a Value struct.
-func parseValue(fieldv reflect.Value, col column) (*Value, error) {
-	var (
-		value *Value
-		err error
-	)
-
-	// fieldv should be a basic type (int, uint, float...)
-	if col.basicType {
-		switch col.ctype {
-		case INT:
-			value, err = newValue(simpleIntType{fieldv.Int()})
-		case UINT:
-			value, err = newValue(simpleUintType{fieldv.Uint()})
-		case FLOAT:
-			value, err = newValue(simpleFloatType{fieldv.Float()})
-		case COMPLEX:
-			value, err  = newValue(simpleComplexType{fieldv.Complex()})
-		case STRING:
-			value, err = newValue(simpleStringType{fieldv.String()})
-		default:
-			//col hasn't a valid columnType
-			panic("invalid column type")
-		}
-	} else {
-		// fieldv is a struct that must implements a ValueType
-		value, err = newValue(fieldv.Interface())
-	}
-
-	if err != nil {
-		return nil, fmt.Errorf("Parsing value: %s", err.Error())
-	}
-
-	return value, nil
-}
-
 /**
 	@TODO comentar función
 */
-func NewDataFrameFromStruct(data interface{}) (*dataFrameStruct, error) {
+func NewDataFrameFromStruct(data interface{}) (*DataFrame, error) {
 	dt, err := getStructOfData(data)
 
 	if err != nil {
@@ -117,7 +72,7 @@ func NewDataFrameFromStruct(data interface{}) (*dataFrameStruct, error) {
 	}
 
 	var exists bool
-	df := dataFrameStruct{}
+	df := DataFrame{}
 	df.columns = []column{}
 	df.cIndexByName = map[string]int{}
 
@@ -152,8 +107,73 @@ func NewDataFrameFromStruct(data interface{}) (*dataFrameStruct, error) {
 		df.cIndexByName[c.name] = len(df.columns) - 1
 	}
 
-	// parse values.
+	df.handler, _ = newDataHandlerStruct(&df, data)
+	return &df, nil
+}
+
+type dataHandlerStruct struct {
+	dataframe *DataFrame
+	data	  []map[string]Value
+	order	  []int
+}
+
+// makeRange makes an slice of consecutive numbers from min param to max param;
+// both numbers included.
+func makeRange(min, max int) []int{
+	r := make([]int, max - min + 1)
+
+	for i := range r {
+		r[i] = min + i
+	}
+
+	return r
+}
+
+// parseValue transforms fieldv in a value Type (IntType, FloatType...),
+// it stores the value transformed  in a Value struct and returns the Value struct.
+// The `col` param has info to transforms the fieldv in a Value struct.
+func parseValue(fieldv reflect.Value, col column) (*Value, error) {
+	var (
+		value *Value
+		err error
+	)
+
+	// fieldv should be a basic type (int, uint, float...)
+	if col.basicType {
+		switch col.ctype {
+		case INT:
+			value, err = newValue(simpleIntType{fieldv.Int()})
+		case UINT:
+			value, err = newValue(simpleUintType{fieldv.Uint()})
+		case FLOAT:
+			value, err = newValue(simpleFloatType{fieldv.Float()})
+		case COMPLEX:
+			value, err = newValue(simpleComplexType{fieldv.Complex()})
+		case STRING:
+			value, err = newValue(simpleStringType{fieldv.String()})
+		default:
+			//col hasn't a valid columnType
+			panic("invalid column type")
+		}
+	} else {
+		// fieldv is a struct that must implements a ValueType
+		value, err = newValue(fieldv.Interface())
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("Parsing value: %s", err.Error())
+	}
+
+	return value, nil
+}
+
+// newDataHandlerStruct func makes a new dataHandlerStruct using the *in* arguments as
+// struct field.
+func newDataHandlerStruct(df *DataFrame, data interface{})(*dataHandlerStruct, error){
 	dv := reflect.ValueOf(data)
+	dh := dataHandlerStruct{}
+	dh.dataframe = df
+
 	if dv.Type().Kind() == reflect.Ptr {
 		dv = dv.Elem()
 	}
@@ -167,85 +187,9 @@ func NewDataFrameFromStruct(data interface{}) (*dataFrameStruct, error) {
 			valuesRow[col.name] = *value
 		}
 
-		df.data = append(df.data, valuesRow)
+		dh.data = append(dh.data, valuesRow)
 	}
 
-	return &df, nil
-}
-
-// getColumnByName function returns the DataFrame column that his name
-// match with the `coln` param. The second param returned is a flag
-// indicating if the column `coln` exists in DataFrame.
-func (df *dataFrameStruct)getColumnByName(coln string) (*column, bool) {
-	pos, exists := df.cIndexByName[coln]
-
-	if !exists {
-		return nil, false
-	}
-
-	return &df.columns[pos], true
-}
-
-//ShowAllColumns func shows all dataframe columns.
-func (df *dataFrameStruct)ShowAllColumns() {
-	for i, _ := range  df.columns {
-		df.columns[i].hidden = false
-	}
-}
-
-// HideAllColumns func hides all dataframe columns
-func (df *dataFrameStruct)HideAllColumns() {
-	for i, _ := range  df.columns {
-		df.columns[i].hidden = true
-	}
-}
-
-// ShowColumns show the columns of the arguments.
-// If one column of the argument doesn't exists, then returns an error.
-func (df *dataFrameStruct)ShowColumns(columns ...string) error {
-	df.HideAllColumns()
-
-	for _, colname := range columns {
-		col, exists := df.getColumnByName(colname)
-
-		if ! exists {
-			return fmt.Errorf("the column %s doesn't exists", colname)
-		}
-
-		col.hidden = false
-	}
-
-	return nil
-}
-
-// HideColumns hide columns of the arguments.
-// If one column of the argument doesn't exists, then returns an error.
-func (df *dataFrameStruct)HideColumns(columns ...string) error {
-	df.ShowAllColumns()
-
-	for _, colname := range columns {
-		col, exists := df.getColumnByName(colname)
-
-		if ! exists {
-			return fmt.Errorf("the column %s doesn't exists", colname)
-		}
-
-		col.hidden = true
-	}
-
-	return nil
-}
-
-
-// Headers returns the columns header of dataframe.
-// the columns hidden are ignored.
-func (df *dataFrameStruct)Headers() []string {
-	header := []string{}
-	for _, col := range df.columns {
-		if !col.hidden {
-			header = append(header, col.name)
-		}
-	}
-
-	return header
+	dh.order = makeRange(0, len(dh.data) - 1)
+	return &dh, nil
 }
