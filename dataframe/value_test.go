@@ -191,6 +191,28 @@ func Test_checkType_func(t *testing.T) {
 		"the function isn't in panic or the panic message is invalid")
 }
 
+func Test_IntType_func(t *testing.T) {
+	as := assert.New(t)
+	v, _ := newValue(simpleIntType{3})
+	i, err := v.IntType()
+
+	if err != nil {
+		as.FailNowf(
+			"error generated when it created a new value",
+			"error: %s", err.Error())
+		return
+	}
+
+	as.Equal(int64(3), i.Value(), "The value isn't match.")
+
+	// Error invalid type
+	v, _ = newValue(simpleUintType{3})
+	u, err := v.IntType()
+
+	as.Equal(int64(0), u.Value(), "There is an error, the value must be 0")
+	as.Equal("value type is not int", err.Error(), "There is an error, the value must be 0")
+}
+
 func Test_toInt_func(t *testing.T) {
 	as := assert.New(t)
 
@@ -204,7 +226,7 @@ func Test_toInt_func(t *testing.T) {
 	v, _ = newValue(simpleFloatType{3})
 	i, err = v.toInt()
 	as.Equal(int64(0), i, "the value must be 0 when there is an error")
-	as.Equal("value isn't type int", err.Error(), "the error message isn't match")
+	as.Equal("value type is not int", err.Error(), "the error message isn't match")
 }
 
 func Test_IntX_func(t *testing.T) {
@@ -227,6 +249,28 @@ func Test_IntX_func(t *testing.T) {
 	as.Equal(int8(100), r5, "the value returned isn't match")
 }
 
+func Test_UintType_func(t *testing.T) {
+	as := assert.New(t)
+	v, _ := newValue(simpleUintType{3})
+	i, err := v.UintType()
+
+	if err != nil {
+		as.FailNowf(
+			"error generated when it created a new value",
+			"error: %s", err.Error())
+		return
+	}
+
+	as.Equal(uint64(3), i.Value(), "The value isn't match.")
+
+	// Error
+	v, _ = newValue(simpleFloatType{3})
+	u, err := v.UintType()
+
+	as.Equal(uint64(0), u.Value(), "There is an error, the value must be 0")
+	as.Equal("value type is not uint", err.Error(), "There is an error, the value must be 0")
+}
+
 func Test_toUint_func(t *testing.T) {
 	as := assert.New(t)
 
@@ -240,7 +284,7 @@ func Test_toUint_func(t *testing.T) {
 	v, _ = newValue(simpleFloatType{3})
 	u, err = v.toUint()
 	as.Equal(uint64(0), u, "the value must be 0 when there is an error")
-	as.Equal("value isn't type uint", err.Error(), "the error message isn't match")
+	as.Equal("value type is not uint", err.Error(), "the error message isn't match")
 }
 
 func Test_UintX_func(t *testing.T) {
@@ -263,6 +307,28 @@ func Test_UintX_func(t *testing.T) {
 	as.Equal(uint8(100), r5, "the value returned isn't match")
 }
 
+func Test_FloatType_func(t *testing.T) {
+	as := assert.New(t)
+	v, _ := newValue(simpleFloatType{3})
+	i, err := v.FloatType()
+
+	if err != nil {
+		as.FailNowf(
+			"error generated when it created a new value",
+			"error: %s", err.Error())
+		return
+	}
+
+	as.Equal(float64(3), i.Value(), "The value isn't match.")
+
+	// Error
+	v, _ = newValue(simpleUintType{3})
+	u, err := v.FloatType()
+
+	as.Equal(float64(0), u.Value(), "There is an error, the value must be 0")
+	as.Equal("value type is not float", err.Error(), "There is an error, the value must be 0")
+}
+
 func Test_toFloat_func(t *testing.T) {
 	as := assert.New(t)
 
@@ -276,7 +342,7 @@ func Test_toFloat_func(t *testing.T) {
 	v, _ = newValue(simpleUintType{3})
 	f, err = v.toFloat()
 	as.Equal(float64(0), f, "the value must be 0 when there is an error")
-	as.Equal("value isn't type float", err.Error(), "the error message isn't match")
+	as.Equal("value type is not float", err.Error(), "the error message isn't match")
 }
 
 func Test_FloatX_func(t *testing.T) {
@@ -288,6 +354,28 @@ func Test_FloatX_func(t *testing.T) {
 
 	r2, _ := v.Float32()
 	as.Equal(float32(100), r2, "the value returned isn't match")
+}
+
+func Test_ComplexType_func(t *testing.T) {
+	as := assert.New(t)
+	v, _ := newValue(simpleComplexType{3})
+	i, err := v.ComplexType()
+
+	if err != nil {
+		as.FailNowf(
+			"error generated when it created a new value",
+			"error: %s", err.Error())
+		return
+	}
+
+	as.Equal(complex128(3), i.Value(), "The value isn't match.")
+
+	// Error
+	v, _ = newValue(simpleUintType{3})
+	u, err := v.ComplexType()
+
+	as.Equal(complex128(0), u.Value(), "There is an error, the value must be 0")
+	as.Equal("value type is not complex", err.Error(), "There is an error, the value must be 0")
 }
 
 func Test_toComplex_func(t *testing.T) {
@@ -303,7 +391,7 @@ func Test_toComplex_func(t *testing.T) {
 	v, _ = newValue(simpleUintType{3})
 	c, err = v.toComplex()
 	as.Equal(complex128(0), c, "the value must be 0 when there is an error")
-	as.Equal("value isn't type complex", err.Error(), "the error message isn't match")
+	as.Equal("value type is not complex", err.Error(), "the error message isn't match")
 }
 
 func Test_ComplexX_func(t *testing.T) {
@@ -315,6 +403,30 @@ func Test_ComplexX_func(t *testing.T) {
 
 	r2, _ := v.Complex64()
 	as.Equal(complex64(3-10i), r2, "the value returned isn't match")
+}
+
+func Test_StringType_func(t *testing.T) {
+	as := assert.New(t)
+	v, _ := newValue(simpleStringType{"test"})
+	i, err := v.StringType()
+
+	if err != nil {
+		as.FailNowf(
+			"error generated when it created a new value",
+			"error: %s", err.Error())
+		return
+	}
+
+	as.Equal("test", i.Value(), "The value isn't match.")
+
+	// Error
+	v, _ = newValue(simpleUintType{3})
+	u, err := v.StringType()
+
+	as.Equal("", u.Value(), "There is an error, the value must be an empty string")
+	as.Equal("value type is not string",
+		err.Error(),
+		"There is an error, the value must be an empty string")
 }
 
 func Test_String_func(t *testing.T) {
@@ -330,5 +442,5 @@ func Test_String_func(t *testing.T) {
 	v, _ = newValue(simpleUintType{3})
 	s, err = v.String()
 	as.Equal("", s, "the value must be 0 when there is an error")
-	as.Equal("value isn't type string", err.Error(), "the error message isn't match")
+	as.Equal("value type is not string", err.Error(), "the error message isn't match")
 }

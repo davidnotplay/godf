@@ -269,18 +269,25 @@ func (v *Value) checkType(t reflect.Kind) bool {
 	}
 }
 
+// IntType returns the IntType interface.
+// If the value isn't int type then returns an error.
+func (v *Value) IntType() (IntType, error) {
+	ok := v.checkType(reflect.Int)
+
+	if !ok {
+		return simpleIntType{0}, errors.New("value type is not int")
+	}
+
+	r, _ := v.value.(IntType)
+	return r, nil
+}
+
 // toInt function transforms v.value in a int.
 // v.value only will transforms in integer if is type `IntType`.
 // Any else type returns an error.
 func (v *Value) toInt() (int64, error) {
-	ok := v.checkType(reflect.Int)
-
-	if !ok {
-		return 0, errors.New("value isn't type int")
-	}
-
-	r, _ := v.value.(IntType)
-	return r.Value(), nil
+	t, err := v.IntType()
+	return t.Value(), err
 }
 
 // Int64 returns the value as int64. `v.value` must has the `IntType` type.
@@ -317,18 +324,25 @@ func (v *Value) Int8() (int8, error) {
 	return int8(r), err
 }
 
+// UintType returns the UintType interface.
+// If the value isn't uint type then returns an error.
+func (v *Value) UintType() (UintType, error) {
+	ok := v.checkType(reflect.Uint)
+
+	if !ok {
+		return simpleUintType{0}, errors.New("value type is not uint")
+	}
+
+	r, _ := v.value.(UintType)
+	return r, nil
+}
+
 // toUint function transforms v.value in a uint.
 // v.value only will transforms in integer if is type `UintType`.
 // Any else type returns an error.
 func (v *Value) toUint() (uint64, error) {
-	ok := v.checkType(reflect.Uint)
-
-	if !ok {
-		return 0, errors.New("value isn't type uint")
-	}
-
-	r, _ := v.value.(UintType)
-	return r.Value(), nil
+	i, err := v.UintType()
+	return i.Value(), err
 }
 
 // Uint64 returns the value as uint64. `v.value` must has the `UintType` type.
@@ -365,18 +379,25 @@ func (v *Value) Uint8() (uint8, error) {
 	return uint8(r), err
 }
 
+// FloatType returns the FloatType interface.
+// If the value isn't uint type then returns an error.
+func (v *Value) FloatType() (FloatType, error) {
+	ok := v.checkType(reflect.Float64)
+
+	if !ok {
+		return simpleFloatType{0}, errors.New("value type is not float")
+	}
+
+	r, _ := v.value.(FloatType)
+	return r, nil
+}
+
 // toFloat function transforms v.value in a float64.
 // v.value only will transforms, if is type `FloatType`.
 // Any else type returns an error.
 func (v *Value) toFloat() (float64, error) {
-	ok := v.checkType(reflect.Float64)
-
-	if !ok {
-		return 0, errors.New("value isn't type float")
-	}
-
-	r, _ := v.value.(FloatType)
-	return r.Value(), nil
+	r, err := v.FloatType()
+	return r.Value(), err
 }
 
 // Float64 returns the value as float64. `v.value` must has the `FloaType` type.
@@ -392,18 +413,25 @@ func (v *Value) Float32() (float32, error) {
 	return float32(r), err
 }
 
+// ComplexType returns the ComplexType interface.
+// If the value isn't uint type then returns an error.
+func (v *Value) ComplexType() (ComplexType, error) {
+	ok := v.checkType(reflect.Complex128)
+
+	if !ok {
+		return simpleComplexType{0}, errors.New("value type is not complex")
+	}
+
+	r, _ := v.value.(ComplexType)
+	return r, nil
+}
+
 // toComplex function transforms v.value in a complex128.
 // v.value only will transforms, if is type `ComplexType`.
 // Any else type returns an error.
 func (v *Value) toComplex() (complex128, error) {
-	ok := v.checkType(reflect.Complex128)
-
-	if !ok {
-		return 0, errors.New("value isn't type complex")
-	}
-
-	r, _ := v.value.(ComplexType)
-	return r.Value(), nil
+	i, err := v.ComplexType()
+	return i.Value(), err
 }
 
 // Complex128 returns the value as complex128. `v.value` must has the `ComplexType` type.
@@ -419,16 +447,23 @@ func (v *Value) Complex64() (complex64, error) {
 	return complex64(r), err
 }
 
+// StringType returns the StringType interface.
+// If the value isn't uint type then returns an error.
+func (v *Value) StringType() (StringType, error) {
+	ok := v.checkType(reflect.String)
+
+	if !ok {
+		return simpleStringType{""}, errors.New("value type is not string")
+	}
+
+	r, _ := v.value.(StringType)
+	return r, nil
+}
+
 // String function transforms v.value in a string.
 // v.value only will transforms, if is type `StringType`.
 // Any else type returns an error.
 func (v *Value) String() (string, error) {
-	ok := v.checkType(reflect.String)
-
-	if !ok {
-		return "", errors.New("value isn't type string")
-	}
-
-	r, _ := v.value.(StringType)
-	return r.Value(), nil
+	i, err := v.StringType()
+	return i.Value(), err
 }
