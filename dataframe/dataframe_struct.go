@@ -3,6 +3,7 @@ package dataframe
 import (
 	"fmt"
 	"reflect"
+	"sort"
 )
 
 // dataHasValidType check if `data` is:
@@ -107,17 +108,19 @@ func NewDataFrameFromStruct(data interface{}) (*DataFrame, error) {
 	}
 
 	df.handler, _ = newDataHandlerStruct(&df, data)
+	df.order = []internalOrderColumn{}
 	return &df, nil
 }
 
 type dataHandlerStruct struct {
-	dataframe *DataFrame
-	data      []map[string]Value
-	order     []int
+	dataframe  *DataFrame
+	data       []map[string]Value
+	orderFuncs []func(a Value, b Value) (Comparers, error)
 }
 
 // makeRange makes an slice of consecutive numbers from min param to max param;
 // both numbers included.
+// @TODO USELESS?
 func makeRange(min, max int) []int {
 	r := make([]int, max-min+1)
 
@@ -189,6 +192,128 @@ func newDataHandlerStruct(df *DataFrame, data interface{}) (*dataHandlerStruct, 
 		dh.data = append(dh.data, valuesRow)
 	}
 
-	dh.order = makeRange(0, len(dh.data)-1)
 	return &dh, nil
+}
+
+// Get func retrieves a concrete value from the DataFrame, using the value row and the value column.
+// If the row or the column is invalid then it returns an error.
+func (dh *dataHandlerStruct) Get(row int, column string) (Value, error) {
+	if len(dh.data) <= row {
+		return Value{}, fmt.Errorf("row %d out of range", row)
+	}
+
+	if _, exists := dh.dataframe.cIndexByName[column]; !exists {
+		return Value{}, fmt.Errorf("column %s not found", column)
+
+	}
+
+	return dh.data[row][column], nil
+}
+
+/**
+Funcs to order the data.
+*/
+
+// prepareOrderFuncs funcs make the array `dataHandlerStruct` with functions they compare two
+// values. The comparer functions depends of the columns will use to compare.
+// This columns are defined in `dh.dataframe.order`
+func (dh *dataHandlerStruct) prepareOrderFuncs() {
+	oColumns := dh.dataframe.order
+	dh.orderFuncs = []func(a, b Value) (Comparers, error){}
+
+	for _, oc := range oColumns {
+		var f func(a, b Value) (Comparers, error)
+
+		switch oc.column.ctype {
+		case INT:
+			f = func(a, b Value) (Comparers, error) {
+				i, _ := a.IntType()
+				v, _ := b.Int64()
+				return i.Compare(v), nil
+			}
+
+		case UINT:
+			f = func(a, b Value) (Comparers, error) {
+				i, _ := a.UintType()
+				v, _ := b.Uint64()
+				return i.Compare(v), nil
+			}
+
+		case FLOAT:
+			f = func(a, b Value) (Comparers, error) {
+				i, _ := a.FloatType()
+				v, _ := b.Float64()
+				return i.Compare(v), nil
+			}
+
+		case COMPLEX:
+			f = func(a, b Value) (Comparers, error) {
+				i, _ := a.ComplexType()
+				v, _ := b.Complex128()
+				return i.Compare(v), nil
+			}
+		case STRING:
+			f = func(a, b Value) (Comparers, error) {
+				i, _ := a.StringType()
+				v, _ := b.String()
+				return i.Compare(v), nil
+			}
+		}
+
+		dh.orderFuncs = append(dh.orderFuncs, f)
+	}
+}
+
+// Len func returns the number of rows in dataframe.
+func (dh *dataHandlerStruct) Len() int {
+	return len(dh.data)
+}
+
+// Swap func swaps the i and j dataframe rows
+// This func is necessary to order the dataframe by columns.
+func (dh *dataHandlerStruct) Swap(i, j int) {
+	dh.data[i], dh.data[j] = dh.data[j], dh.data[i]
+}
+
+// Less returns true if the row i is more less than j row.
+// To compare both rows use the `orderFuncs` array made in the function `prepareOrderFuncs`
+// This func is necessary to order the dataframe by columns.
+func (dh *dataHandlerStruct) Less(i, j int) bool {
+
+	for indx, f := range dh.orderFuncs {
+		ocol := dh.dataframe.order[indx]
+		valuei, _ := dh.Get(i, ocol.column.name)
+		valuej, _ := dh.Get(j, ocol.column.name)
+		comp, _ := f(valuei, valuej)
+
+		switch comp {
+		case EQUAL:
+			continue
+		case LESS:
+			if ocol.order == ASC {
+				return true
+			}
+
+			return false
+		case GREAT:
+			if ocol.order == ASC {
+				return false
+			}
+
+			return true
+		}
+	}
+
+	return false
+}
+
+// order func Orders the dataframe rows using the order stored in `dh.dataframe.order`
+func (dh *dataHandlerStruct) order() error {
+	if len(dh.dataframe.order) == 0 {
+		return nil // there isn't order defined.
+	}
+
+	dh.prepareOrderFuncs()
+	sort.Sort(dh)
+	return nil
 }

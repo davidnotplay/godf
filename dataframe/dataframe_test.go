@@ -159,3 +159,37 @@ func Test_Header_func(t *testing.T) {
 		as.Containsf(headers, result, "The %s header isn't exists", result)
 	}
 }
+
+func Test_dataframe_order_func(t *testing.T) {
+	type dataStruct struct {
+		A int `colName:"a"`
+		B int `colName:"b"`
+	}
+
+	as := assert.New(t)
+	data := []dataStruct{
+		{3, 5}, {4, 1}, {1, 1}, {1, 2}, {2, 3}, {2, 3}, {3, 4}, {2, 1},
+	}
+
+	df, err := NewDataFrameFromStruct(data)
+	if err != nil {
+		as.FailNowf(
+			"error generated when it created a new DataFrame",
+			"error: %s", err.Error())
+		return
+	}
+
+	df.Order(OrderColumn{"a", ASC}, OrderColumn{"b", DESC})
+	dataOrdered := []dataStruct{
+		{1, 2}, {1, 1}, {2, 3}, {2, 3}, {2, 1}, {3, 5}, {3, 4}, {4, 1},
+	}
+
+	for i, r := range dataOrdered {
+		a, _ := df.handler.Get(i, "a")
+		b, _ := df.handler.Get(i, "b")
+		av, _ := a.Int()
+		bv, _ := b.Int()
+		as.Equalf(r.A, av, "the cell %d a does not match", i)
+		as.Equalf(r.B, bv, "the cell %d a does not match", i)
+	}
+}

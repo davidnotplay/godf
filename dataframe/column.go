@@ -115,3 +115,20 @@ type column struct {
 	// flag indicating if is a basic type.
 	basicType bool
 }
+
+type orderType int8
+
+const (
+	ASC  orderType = 1
+	DESC orderType = 2
+)
+
+type internalOrderColumn struct {
+	column *column
+	order  orderType
+}
+
+type OrderColumn struct {
+	Name  string
+	Order orderType
+}

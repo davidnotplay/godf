@@ -318,8 +318,10 @@ func Test_NewDataFrameFromStruct_func_dataHandler(t *testing.T) {
 		as.FailNow("there an error", err.Error())
 	}
 
+	dhs, _ := df.handler.(*dataHandlerStruct)
+
 	// Check row 1, column a
-	v, ok := df.handler.data[0]["a"]
+	v, ok := dhs.data[0]["a"]
 	if !ok {
 		as.FailNow("error in column a", "column a not found")
 	}
@@ -330,7 +332,7 @@ func Test_NewDataFrameFromStruct_func_dataHandler(t *testing.T) {
 	as.Equal(3, i, "the values doesn't match")
 
 	// Check row 1, column b
-	v, ok = df.handler.data[0]["b"]
+	v, ok = dhs.data[0]["b"]
 	if !ok {
 		as.FailNow("error in column b", "column b not found")
 	}
@@ -341,7 +343,7 @@ func Test_NewDataFrameFromStruct_func_dataHandler(t *testing.T) {
 	as.Equal(float32(3.2), f, "the values doesn't match")
 
 	// Check row 1, column c
-	v, ok = df.handler.data[0]["s"]
+	v, ok = dhs.data[0]["s"]
 	if !ok {
 		as.FailNow("error in column s", "column s not found")
 	}
@@ -352,7 +354,7 @@ func Test_NewDataFrameFromStruct_func_dataHandler(t *testing.T) {
 	as.Equal("test1", s, "the values doesn't match")
 
 	// Check row 2, column a
-	v, ok = df.handler.data[1]["a"]
+	v, ok = dhs.data[1]["a"]
 	if !ok {
 		as.FailNow("error in column a", "column a not found")
 	}
@@ -363,7 +365,7 @@ func Test_NewDataFrameFromStruct_func_dataHandler(t *testing.T) {
 	as.Equal(4, i, "the values doesn't match")
 
 	// Check row 2, column b
-	v, ok = df.handler.data[1]["b"]
+	v, ok = dhs.data[1]["b"]
 	if !ok {
 		as.FailNow("error in column b", "column b not found")
 	}
@@ -374,7 +376,7 @@ func Test_NewDataFrameFromStruct_func_dataHandler(t *testing.T) {
 	as.Equal(float32(4.2), f, "the values doesn't match")
 
 	// Check row 2, column c
-	v, ok = df.handler.data[1]["s"]
+	v, ok = dhs.data[1]["s"]
 	if !ok {
 		as.FailNow("error in column s", "column s not found")
 	}
@@ -384,11 +386,318 @@ func Test_NewDataFrameFromStruct_func_dataHandler(t *testing.T) {
 	}
 	as.Equal("test2", s, "the values doesn't match")
 
-	// Check the order field of the data handler.
-	as.Equal(2, len(df.handler.order), "the order length is invalid")
-	as.Equal(0, df.handler.order[0], "the order is incorrect")
-	as.Equal(1, df.handler.order[1], "the order is incorrect")
-
 	// check if dataframehandler has the dataframe as field. // check memory address.
-	as.Equal(df, df.handler.dataframe, "the memory address is different")
+	as.Equal(df, dhs.dataframe, "the memory address is different")
+
+	/** @TODO check the DataFrame order field. */
+}
+
+func Test_dataHandlerStruct_Get_func(t *testing.T) {
+	as := assert.New(t)
+	data := []struct {
+		A int              `colName:"a"`
+		B float32          `colName:"b"`
+		C simpleStringType `colName:"s"`
+	}{
+		{3, 3.2, simpleStringType{"test1"}},
+		{4, 4.2, simpleStringType{"test2"}}}
+
+	df, err := NewDataFrameFromStruct(data)
+
+	if err != nil {
+		as.FailNowf("error creating the DataFrame from struct", err.Error())
+		return
+	}
+
+	value, err := df.handler.Get(0, "a")
+	if err != nil {
+		as.FailNowf("error fecthing a value", err.Error())
+		return
+	}
+
+	i, _ := value.Int()
+	as.Equal(3, i, "the value fecthed is wrong")
+
+	// test again.
+	value, err = df.handler.Get(1, "s")
+	if err != nil {
+		as.FailNowf("error fecthing a value", err.Error())
+		return
+	}
+
+	s, _ := value.String()
+	as.Equal("test2", s, "the value fecthed is wrong")
+
+	// invalid row
+	_, err = df.handler.Get(2, "a")
+	as.Equal("row 2 out of range", err.Error(), "error message returned is wrong")
+
+	// invalid column
+	_, err = df.handler.Get(0, "c1")
+	as.Equal("column c1 not found", err.Error(), "error message returned is wrong")
+}
+
+func Test_prepareOrderFuncs_func(t *testing.T) {
+	as := assert.New(t)
+	data := []struct {
+		I int       `colName:"i"`
+		U uint      `colName:"u"`
+		F float32   `colName:"f"`
+		C complex64 `colName:"c"`
+		S string    `colName:"s"`
+	}{}
+	df, _ := NewDataFrameFromStruct(data)
+
+	df.order = []internalOrderColumn{
+		{&df.columns[0], ASC},
+		{&df.columns[1], ASC},
+		{&df.columns[2], ASC},
+		{&df.columns[3], ASC},
+		{&df.columns[4], ASC},
+	}
+
+	// make the order function
+	dhs, _ := df.handler.(*dataHandlerStruct)
+
+	// previously the func should be null
+	as.Nil(dhs.orderFuncs, "the orderFuncs slice is not empty")
+
+	dhs.prepareOrderFuncs()
+
+	as.Equal(5, len(dhs.orderFuncs), "the length of the array is not match")
+
+	a, _ := newValue(simpleIntType{3})
+	b, _ := newValue(simpleIntType{3})
+	r, _ := dhs.orderFuncs[0](*a, *b)
+	as.Equal(EQUAL, r, "the func returns a different value")
+
+	a, _ = newValue(simpleUintType{3})
+	b, _ = newValue(simpleUintType{3})
+	r, _ = dhs.orderFuncs[1](*a, *b)
+	as.Equal(EQUAL, r, "the func returns a different value")
+
+	a, _ = newValue(simpleFloatType{3})
+	b, _ = newValue(simpleFloatType{3})
+	r, _ = dhs.orderFuncs[2](*a, *b)
+	as.Equal(EQUAL, r, "the func returns a different value")
+
+	a, _ = newValue(simpleComplexType{3})
+	b, _ = newValue(simpleComplexType{3})
+	r, _ = dhs.orderFuncs[2](*a, *b)
+	as.Equal(EQUAL, r, "the func returns a different value")
+
+	a, _ = newValue(simpleStringType{"3"})
+	b, _ = newValue(simpleStringType{"3"})
+	r, _ = dhs.orderFuncs[2](*a, *b)
+	as.Equal(EQUAL, r, "the func returns a different value")
+}
+
+func Test_Len_method(t *testing.T) {
+	as := assert.New(t)
+	data := []struct {
+		A int `colName:"a"`
+	}{
+		{3}, {2}, {1},
+	}
+
+	df, err := NewDataFrameFromStruct(data[0:0])
+	if err != nil {
+		as.FailNowf(
+			"error generated when it created a new DataFrame",
+			"error: %s", err.Error())
+		return
+	}
+
+	dhs := df.handler.(*dataHandlerStruct)
+	as.Equal(0, dhs.Len(), "the value returned is not valid")
+
+	df, err = NewDataFrameFromStruct(data)
+	if err != nil {
+		as.FailNowf(
+			"error generated when it created a new DataFrame",
+			"error: %s", err.Error())
+		return
+	}
+
+	dhs = df.handler.(*dataHandlerStruct)
+	as.Equal(3, dhs.Len(), "the value returned is not valid")
+}
+
+func Test_Swap_func(t *testing.T) {
+	as := assert.New(t)
+	data := []struct {
+		A int `colName:"a"`
+	}{
+		{1}, {2}, {3}, {4}, {5}, {6},
+	}
+	results := [...]int{1, 2, 3, 4, 5, 6}
+
+	df, err := NewDataFrameFromStruct(data)
+	if err != nil {
+		as.FailNowf(
+			"error generated when it created a new DataFrame",
+			"error: %s", err.Error())
+		return
+	}
+
+	dhs := df.handler.(*dataHandlerStruct)
+
+	// initial data
+	for i, row := range dhs.data {
+		cell, _ := row["a"]
+		num, _ := cell.Int()
+		as.Equalf(results[i], num, "the inital value of the %d position is invalid", i)
+	}
+
+	// swapping value
+	for i := 0; i < dhs.Len(); i++ {
+		for j := 0; j < dhs.Len(); j++ {
+			results[i], results[j] = results[j], results[i]
+			dhs.Swap(i, j)
+			celli, _ := dhs.data[i]["a"]
+			cellj, _ := dhs.data[j]["a"]
+			iv, _ := celli.Int()
+			jv, _ := cellj.Int()
+			as.Equal(
+				results[i], iv,
+				"swapping the positions %d %d, the value is invalid", i, j)
+			as.Equal(
+				results[j], jv,
+				"swapping the positions %d %d, the value is invalid", i, j)
+		}
+	}
+}
+
+func Test_Less_func(t *testing.T) {
+	type resultStruct struct {
+		i int
+		j int
+		r bool
+	}
+
+	as := assert.New(t)
+	data := []struct {
+		A int `colName:"a"`
+		B int `colName:"b"`
+	}{
+		{1, 1}, {1, 2}, {2, 3}, {2, 3}, {3, 4}, {2, 1},
+	}
+
+	df, err := NewDataFrameFromStruct(data)
+	if err != nil {
+		as.FailNowf(
+			"error generated when it created a new DataFrame",
+			"error: %s", err.Error())
+		return
+	}
+
+	dhs := df.handler.(*dataHandlerStruct)
+
+	// single column ASC
+	dhs.dataframe.order = []internalOrderColumn{{&dhs.dataframe.columns[0], ASC}}
+	dhs.prepareOrderFuncs()
+	results := []resultStruct{
+		{0, 2, true},
+		{0, 1, false},
+		{2, 1, false},
+	}
+
+	for _, r := range results {
+		as.Equal(r.r, dhs.Less(r.i, r.j),
+			"the comparison between %d and %d is wrong", r.i, r.j)
+
+	}
+
+	// single column DESC
+	dhs.dataframe.order = []internalOrderColumn{{&dhs.dataframe.columns[0], DESC}}
+	dhs.prepareOrderFuncs()
+	results = []resultStruct{
+		{0, 2, false},
+		{0, 1, false},
+		{2, 1, true},
+	}
+	for _, r := range results {
+		as.Equal(r.r, dhs.Less(r.i, r.j),
+			"the comparison between %d and %d is wrong", r.i, r.j)
+
+	}
+
+	// multiple columns ASC
+	dhs.dataframe.order = []internalOrderColumn{
+		{&dhs.dataframe.columns[0], ASC},
+		{&dhs.dataframe.columns[1], ASC},
+	}
+	dhs.prepareOrderFuncs()
+	results = []resultStruct{
+		{0, 2, true},
+		{0, 1, true},
+		{2, 3, false},
+		{2, 5, false},
+		{3, 4, true},
+	}
+
+	for _, r := range results {
+		as.Equal(r.r, dhs.Less(r.i, r.j),
+			"the comparison between %d and %d is wrong", r.i, r.j)
+
+	}
+
+	// multiple columns DESC
+	dhs.dataframe.order = []internalOrderColumn{
+		{&dhs.dataframe.columns[0], DESC},
+		{&dhs.dataframe.columns[1], DESC},
+	}
+	dhs.prepareOrderFuncs()
+	results = []resultStruct{
+		{0, 2, false},
+		{0, 1, false},
+		{2, 3, false},
+		{2, 5, true},
+		{3, 4, false},
+	}
+
+	for _, r := range results {
+		as.Equal(r.r, dhs.Less(r.i, r.j),
+			"the comparison between %d and %d is wrong", r.i, r.j)
+
+	}
+}
+
+func Test_dataHandlerStruct_order_func(t *testing.T) {
+	type dataStruct struct {
+		A int `colName:"a"`
+		B int `colName:"b"`
+	}
+
+	as := assert.New(t)
+	data := []dataStruct{
+		{3, 5}, {4, 1}, {1, 1}, {1, 2}, {2, 3}, {2, 3}, {3, 4}, {2, 1},
+	}
+
+	df, err := NewDataFrameFromStruct(data)
+	if err != nil {
+		as.FailNowf(
+			"error generated when it created a new DataFrame",
+			"error: %s", err.Error())
+		return
+	}
+
+	dhs := df.handler.(*dataHandlerStruct)
+	dhs.dataframe.order = []internalOrderColumn{
+		{&dhs.dataframe.columns[0], ASC},
+		{&dhs.dataframe.columns[1], DESC},
+	}
+	dhs.order()
+	dataOrdered := []dataStruct{
+		{1, 2}, {1, 1}, {2, 3}, {2, 3}, {2, 1}, {3, 5}, {3, 4}, {4, 1},
+	}
+
+	for i, r := range dataOrdered {
+		a, _ := dhs.Get(i, "a")
+		b, _ := dhs.Get(i, "b")
+		av, _ := a.Int()
+		bv, _ := b.Int()
+		as.Equalf(r.A, av, "the cell %d a does not match", i)
+		as.Equalf(r.B, bv, "the cell %d a does not match", i)
+	}
 }
