@@ -104,8 +104,6 @@ func (c columnType) Kind() reflect.Kind {
 }
 
 type column struct {
-	// flag indicating if the column is hidde for the operations.
-	hidden bool
 	// column name
 	name string
 	// Column type
