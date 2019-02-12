@@ -195,6 +195,10 @@ func newDataHandlerStruct(df *DataFrame, data interface{}) (*dataHandlerStruct, 
 	return &dh, nil
 }
 
+/**
+	Funcs to get the data.
+*/
+
 // Get func retrieves a concrete value from the DataFrame, using the value row and the value column.
 // If the row or the column is invalid then it returns an error.
 func (dh *dataHandlerStruct) Get(row int, column string) (Value, error) {
@@ -211,7 +215,7 @@ func (dh *dataHandlerStruct) Get(row int, column string) (Value, error) {
 }
 
 /**
-Funcs to order the data.
+	Funcs to order the data.
 */
 
 // prepareOrderFuncs funcs make the array `dataHandlerStruct` with functions they compare two

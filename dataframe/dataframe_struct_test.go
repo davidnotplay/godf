@@ -385,8 +385,6 @@ func Test_NewDataFrameFromStruct_func_dataHandler(t *testing.T) {
 
 	// check if dataframehandler has the dataframe as field. // check memory address.
 	as.Equal(df, dhs.dataframe, "the memory address is different")
-
-	/** @TODO check the DataFrame order field. */
 }
 
 func Test_dataHandlerStruct_Get_func(t *testing.T) {

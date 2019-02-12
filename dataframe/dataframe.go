@@ -15,6 +15,7 @@ type DataFrame struct {
 type DataHandler interface {
 	Get(row int, column string) (Value, error)
 	order() error
+	Len() int
 }
 
 // getColumnByName function returns the DataFrame column that his name
