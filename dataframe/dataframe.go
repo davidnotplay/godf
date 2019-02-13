@@ -41,6 +41,11 @@ func (df *DataFrame) Headers() []string {
 	return header
 }
 
+// Iterator creates and returns a new Iterator to DataFrame data.
+func (df *DataFrame) Iterator() Iterator {
+	return Iterator{df, 0}
+}
+
 // Order the dataframe rows using the newOrder array.
 // Returns an error if the column name is not exists.
 func (df *DataFrame) Order(newOrder ...OrderColumn) error {

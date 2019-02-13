@@ -33,16 +33,15 @@ func Test_newRow_func(t *testing.T) {
 				"error: %s", err.Error())
 			return
 		}
-		rowData := row.(*dataRow)
-		as.Equal(df, rowData.df, "the dataframe address is different")
-		as.Equal(i, rowData.index, "the row index is different")
+		as.Equal(df, row.df, "the dataframe address is different")
+		as.Equal(i, row.index, "the row index is different")
 	}
 
 	// Invalid index
 	invalidIndex := []int{2, 3}
 	for _, i := range invalidIndex {
 		row, err := newRow(df, i)
-		if row != nil {
+		if row.df != nil {
 			as.FailNow("valid row",
 				"return a valid row, when it makes a invalid row.")
 			return
