@@ -41,6 +41,11 @@ func (df *DataFrame) Headers() []string {
 	return header
 }
 
+// NumberRows returns the number of rows in DataFrame.
+func (df *DataFrame) NumberRows() int {
+	return df.handler.Len()
+}
+
 // Iterator creates and returns a new Iterator to DataFrame data.
 func (df *DataFrame) Iterator() Iterator {
 	return Iterator{df, 0}

@@ -54,6 +54,28 @@ func Test_Header_func(t *testing.T) {
 	}
 }
 
+func Test_dataframe_len_func(t *testing.T) {
+	type dataStruct struct {
+		A int `colName:"a"`
+		B int `colName:"b"`
+	}
+
+	as := assert.New(t)
+	data := []dataStruct{
+		{3, 5}, {4, 1}, {1, 1}, {1, 2},
+	}
+
+	df, err := NewDataFrameFromStruct(data)
+	if err != nil {
+		as.FailNowf(
+			"error generated when it created a new DataFrame",
+			"error: %s", err.Error())
+		return
+	}
+
+	as.Equal(4, df.NumberRows(), "the dataframe length does not match.")
+}
+
 func Test_dataframe_iterator_func(t *testing.T) {
 	type dataStruct struct {
 		A int `colName:"a"`
