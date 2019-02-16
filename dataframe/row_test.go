@@ -7,6 +7,7 @@ import (
 )
 
 func Test_newRow_func(t *testing.T) {
+	var df *DataFrame
 	as := assert.New(t)
 	data := []struct {
 		A int `colName:"a"`
@@ -14,12 +15,8 @@ func Test_newRow_func(t *testing.T) {
 	}{
 		{3, 5}, {4, 1},
 	}
-	df, err := NewDataFrameFromStruct(data)
 
-	if err != nil {
-		as.FailNowf(
-			"error generated when it created a new DataFrame",
-			"error: %s", err.Error())
+	if df = makeDataFrame(data, t); df == nil {
 		return
 	}
 
@@ -52,27 +49,15 @@ func Test_newRow_func(t *testing.T) {
 }
 
 func Test_Cell_func(t *testing.T) {
+	var df *DataFrame
+	var data []mockData
 	as := assert.New(t)
-	data := []struct {
-		A int `colName:"a"`
-		B int `colName:"b"`
-	}{
-		{3, 5}, {4, 1},
-	}
-	df, err := NewDataFrameFromStruct(data)
 
-	if err != nil {
-		as.FailNowf(
-			"error generated when it created a new DataFrame",
-			"error: %s", err.Error())
+	if df, data = makeDataFrameMockData(t); df == nil {
 		return
 	}
 
-	results := [][]int {
-		{3, 5}, {4, 1},
-	}
-
-	for i, result := range results {
+	for i, dataRow := range data {
 		row, err := newRow(df, i)
 		if err != nil {
 			as.FailNowf(
@@ -89,7 +74,7 @@ func Test_Cell_func(t *testing.T) {
 				"error: %s", err.Error())
 			return
 		}
-		as.Equalf(result[0], valueInt, "in row %d. the a value is not match.", i)
+		as.Equalf(dataRow.A, valueInt, "in row %d. the a value is not match.", i)
 		c, err = row.Cell("b")
 		valueInt, _ = c.Int()
 		if err != nil {
@@ -98,7 +83,7 @@ func Test_Cell_func(t *testing.T) {
 				"error: %s", err.Error())
 			return
 		}
-		as.Equalf(result[1], valueInt, "in row %d. the b value is not match.", i)
+		as.Equalf(dataRow.B, valueInt, "in row %d. the b value is not match.", i)
 
 	}
 

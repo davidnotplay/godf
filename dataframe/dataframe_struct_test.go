@@ -86,6 +86,7 @@ func Test_isExportable_func(t *testing.T) {
 }
 
 func Test_NewDataFrameFromStruct_func_Struct(t *testing.T) {
+	var df *DataFrame
 	as := assert.New(t)
 	type s struct {
 		a int
@@ -97,14 +98,11 @@ func Test_NewDataFrameFromStruct_func_Struct(t *testing.T) {
 	}
 	data := []s{}
 
-	df, err := NewDataFrameFromStruct(data)
 
-	// Check error
-	if err != nil {
-		as.FailNowf("dataframe error", "function generate the error %s", err.Error())
+
+	if df = makeDataFrame(data, t); df == nil {
 		return
 	}
-	as.Nil(err)
 
 	// Check df.columns
 	as.Equal(len(df.columns), 3)
@@ -132,27 +130,27 @@ func Test_NewDataFrameFromStruct_func_Struct(t *testing.T) {
 }
 
 func Test_NewDataFrameFromStruct_func_ValidParam(t *testing.T) {
-	as := assert.New(t)
+	var df *DataFrame
 
 	// check slice
-	df, err := NewDataFrameFromStruct([]struct{}{})
-	as.NotNil(df, "Only is Nil when there is an error")
-	as.Nil(err, "The error must be Nil")
+	if df = makeDataFrame([]struct{}{}, t); df == nil {
+		return
+	}
 
 	// check *slice
-	df, err = NewDataFrameFromStruct(new([]struct{}))
-	as.NotNil(df, "Only is Nil when there is an error")
-	as.Nil(err, "The error must be Nil")
+	if df = makeDataFrame(new([]struct{}), t); df == nil {
+		return
+	}
 
 	// check array
-	df, err = NewDataFrameFromStruct([1]struct{}{})
-	as.NotNil(df, "Only is Nil when there is an error")
-	as.Nil(err, "The error must be Nil")
+	if df = makeDataFrame([1]struct{}{}, t); df == nil {
+		return
+	}
 
 	// check *array
-	df, err = NewDataFrameFromStruct(new([1]struct{}))
-	as.NotNil(df, "Only is Nil when there is an error")
-	as.Nil(err, "The error must be Nil")
+	if df = makeDataFrame(new([1]struct{}), t); df == nil {
+		return
+	}
 }
 
 func Test_NewDataFrameFromStruct_func_error(t *testing.T) {
@@ -208,7 +206,9 @@ func Test_parseValue_func(t *testing.T) {
 		UINT:    uint(3),
 		FLOAT:   3.2,
 		COMPLEX: 3 + 3i,
-		STRING:  "3"}
+		STRING:  "3",
+	}
+
 	for ct, value := range data {
 		col := column{"test", ct, 0, true}
 		valueObj, err := parseValue(reflect.ValueOf(value), col)
@@ -243,7 +243,9 @@ func Test_parseValue_func(t *testing.T) {
 		UINT:    simpleUintType{3},
 		FLOAT:   simpleFloatType{3.2},
 		COMPLEX: simpleComplexType{3 + 3i},
-		STRING:  simpleStringType{"3"}}
+		STRING:  simpleStringType{"3"},
+	}
+
 	for ct, value := range data {
 		col := column{"test", ct, 0, false}
 		valueObj, err := parseValue(reflect.ValueOf(value), col)
@@ -388,6 +390,7 @@ func Test_NewDataFrameFromStruct_func_dataHandler(t *testing.T) {
 }
 
 func Test_dataHandlerStruct_Get_func(t *testing.T) {
+	var df *DataFrame
 	as := assert.New(t)
 	data := []struct {
 		A int              `colName:"a"`
@@ -397,10 +400,7 @@ func Test_dataHandlerStruct_Get_func(t *testing.T) {
 		{3, 3.2, simpleStringType{"test1"}},
 		{4, 4.2, simpleStringType{"test2"}}}
 
-	df, err := NewDataFrameFromStruct(data)
-
-	if err != nil {
-		as.FailNowf("error creating the DataFrame from struct", err.Error())
+	if df = makeDataFrame(data, t); df == nil {
 		return
 	}
 
@@ -433,6 +433,7 @@ func Test_dataHandlerStruct_Get_func(t *testing.T) {
 }
 
 func Test_prepareOrderFuncs_func(t *testing.T) {
+	var df *DataFrame
 	as := assert.New(t)
 	data := []struct {
 		I int       `colName:"i"`
@@ -441,7 +442,10 @@ func Test_prepareOrderFuncs_func(t *testing.T) {
 		C complex64 `colName:"c"`
 		S string    `colName:"s"`
 	}{}
-	df, _ := NewDataFrameFromStruct(data)
+
+	if df = makeDataFrame(data, t); data == nil {
+		return
+	}
 
 	df.order = []internalOrderColumn{
 		{&df.columns[0], ASC},
@@ -488,6 +492,7 @@ func Test_prepareOrderFuncs_func(t *testing.T) {
 }
 
 func Test_Len_method(t *testing.T) {
+	var df *DataFrame
 	as := assert.New(t)
 	data := []struct {
 		A int `colName:"a"`
@@ -495,127 +500,105 @@ func Test_Len_method(t *testing.T) {
 		{3}, {2}, {1},
 	}
 
-	df, err := NewDataFrameFromStruct(data[0:0])
-	if err != nil {
-		as.FailNowf(
-			"error generated when it created a new DataFrame",
-			"error: %s", err.Error())
+	if df = makeDataFrame(data[0:0], t); df == nil {
 		return
 	}
-
 	dhs := df.handler.(*dataHandlerStruct)
 	as.Equal(0, dhs.Len(), "the value returned is not valid")
 
-	df, err = NewDataFrameFromStruct(data)
-	if err != nil {
-		as.FailNowf(
-			"error generated when it created a new DataFrame",
-			"error: %s", err.Error())
+	if df = makeDataFrame(data, t); df == nil {
 		return
 	}
-
 	dhs = df.handler.(*dataHandlerStruct)
 	as.Equal(3, dhs.Len(), "the value returned is not valid")
 }
 
 func Test_Swap_func(t *testing.T) {
+	var df *DataFrame
+	var md []mockData
 	as := assert.New(t)
-	data := []struct {
-		A int `colName:"a"`
-	}{
-		{1}, {2}, {3}, {4}, {5}, {6},
-	}
-	results := [...]int{1, 2, 3, 4, 5, 6}
 
-	df, err := NewDataFrameFromStruct(data)
-	if err != nil {
-		as.FailNowf(
-			"error generated when it created a new DataFrame",
-			"error: %s", err.Error())
+	if df, md = makeDataFrameMockData(t); df == nil {
 		return
 	}
 
 	dhs := df.handler.(*dataHandlerStruct)
+	// get the integers value of the DataFrame row, position i.
+	fv := func(i int)(a int, b int) {
+		row := dhs.data[i]
+		cella := row["a"]
+		cellb := row["b"]
+		a, _ = cella.Int()
+		b, _ = cellb.Int()
+		return
+	}
 
 	// initial data
-	for i, row := range dhs.data {
-		cell, _ := row["a"]
-		num, _ := cell.Int()
-		as.Equalf(results[i], num, "the inital value of the %d position is invalid", i)
+	for i, dataRow := range md {
+		numa, numb := fv(i)
+		as.Equalf(dataRow.A, numa, "the initial value row: %d, col: a is invalid.", i)
+		as.Equalf(dataRow.B, numb, "the initial value row: %d, col: b is invalid.", i)
 	}
 
 	// swapping value
-	for i := 0; i < dhs.Len(); i++ {
-		for j := 0; j < dhs.Len(); j++ {
-			results[i], results[j] = results[j], results[i]
+	mdLen := len(md)
+	for i := 0; i < mdLen; i++ {
+		for j := 0; j < mdLen; j++ {
+			md[i], md[j] = md[j], md[i]
 			dhs.Swap(i, j)
-			celli, _ := dhs.data[i]["a"]
-			cellj, _ := dhs.data[j]["a"]
-			iv, _ := celli.Int()
-			jv, _ := cellj.Int()
-			as.Equal(
-				results[i], iv,
-				"swapping the positions %d %d, the value is invalid", i, j)
-			as.Equal(
-				results[j], jv,
-				"swapping the positions %d %d, the value is invalid", i, j)
+			numia, numib := fv(i)
+			numja, numjb := fv(j)
+
+			as.Equalf(
+				md[i].A, numia,
+				"the ixa value is invalid when it swapped the positions %d, %d",
+				i, j)
+			as.Equalf(
+				md[i].B, numib,
+				"the  ixb value is invalid when it swapped the positions %d, %d",
+				i, j)
+			as.Equalf(
+				md[j].A, numja,
+				"the jxa value is invalid when it swapped the positions %d, %d",
+				i, j)
+			as.Equalf(
+				md[j].B, numjb,
+				"the  jxb value is invalid when it swapped the positions %d, %d",
+				i, j)
 		}
 	}
 }
 
 func Test_Less_func(t *testing.T) {
-	type resultStruct struct {
-		i int
-		j int
-		r bool
-	}
-
+	var df *DataFrame
+	var md []mockData
 	as := assert.New(t)
-	data := []struct {
-		A int `colName:"a"`
-		B int `colName:"b"`
-	}{
-		{1, 1}, {1, 2}, {2, 3}, {2, 3}, {3, 4}, {2, 1},
-	}
 
-	df, err := NewDataFrameFromStruct(data)
-	if err != nil {
-		as.FailNowf(
-			"error generated when it created a new DataFrame",
-			"error: %s", err.Error())
+	if df, md = makeDataFrameMockData(t); df == nil {
 		return
 	}
-
 	dhs := df.handler.(*dataHandlerStruct)
+
+	floop := func(fcheck func(mockData, mockData) bool) {
+		l := len(md)
+		msg :="differents results comparing position %d and %d"
+		for i := 0; i < l; i++ {
+			for j := 0; j < l; j++ {
+				as.Equalf(fcheck(md[i], md[j]), dhs.Less(i, j), msg, i, j)
+			}
+		}
+	}
+
 
 	// single column ASC
 	dhs.dataframe.order = []internalOrderColumn{{&dhs.dataframe.columns[0], ASC}}
 	dhs.prepareOrderFuncs()
-	results := []resultStruct{
-		{0, 2, true},
-		{0, 1, false},
-		{2, 1, false},
-	}
-
-	for _, r := range results {
-		as.Equal(r.r, dhs.Less(r.i, r.j),
-			"the comparison between %d and %d is wrong", r.i, r.j)
-
-	}
+	floop(func(i, j mockData) bool { return i.A < j.A })
 
 	// single column DESC
 	dhs.dataframe.order = []internalOrderColumn{{&dhs.dataframe.columns[0], DESC}}
 	dhs.prepareOrderFuncs()
-	results = []resultStruct{
-		{0, 2, false},
-		{0, 1, false},
-		{2, 1, true},
-	}
-	for _, r := range results {
-		as.Equal(r.r, dhs.Less(r.i, r.j),
-			"the comparison between %d and %d is wrong", r.i, r.j)
-
-	}
+	floop(func(i, j mockData) bool { return j.A < i.A })
 
 	// multiple columns ASC
 	dhs.dataframe.order = []internalOrderColumn{
@@ -623,19 +606,13 @@ func Test_Less_func(t *testing.T) {
 		{&dhs.dataframe.columns[1], ASC},
 	}
 	dhs.prepareOrderFuncs()
-	results = []resultStruct{
-		{0, 2, true},
-		{0, 1, true},
-		{2, 3, false},
-		{2, 5, false},
-		{3, 4, true},
-	}
+	floop(func(i, j mockData) bool {
+		if (i.A == j.A) {
+			return i.B < j.B
+		}
 
-	for _, r := range results {
-		as.Equal(r.r, dhs.Less(r.i, r.j),
-			"the comparison between %d and %d is wrong", r.i, r.j)
-
-	}
+		return i.A < j.A
+	})
 
 	// multiple columns DESC
 	dhs.dataframe.order = []internalOrderColumn{
@@ -643,39 +620,28 @@ func Test_Less_func(t *testing.T) {
 		{&dhs.dataframe.columns[1], DESC},
 	}
 	dhs.prepareOrderFuncs()
-	results = []resultStruct{
-		{0, 2, false},
-		{0, 1, false},
-		{2, 3, false},
-		{2, 5, true},
-		{3, 4, false},
-	}
+	floop(func(i, j mockData) bool {
+		if (j.A == i.A) {
+			return j.B < i.B
+		}
 
-	for _, r := range results {
-		as.Equal(r.r, dhs.Less(r.i, r.j),
-			"the comparison between %d and %d is wrong", r.i, r.j)
-
-	}
+		return j.A < i.A
+	})
 }
 
 func Test_dataHandlerStruct_order_func(t *testing.T) {
-	type dataStruct struct {
-		A int `colName:"a"`
-		B int `colName:"b"`
-	}
-
+	var df *DataFrame
 	as := assert.New(t)
-	data := []dataStruct{
-		{3, 5}, {4, 1}, {1, 1}, {1, 2}, {2, 3}, {2, 3}, {3, 4}, {2, 1},
+
+	data := []mockData{
+		{3, 5}, {4, 1}, {1, 1}, {1, 2},
+		{2, 3}, {2, 3}, {3, 4}, {2, 1},
 	}
 
-	df, err := NewDataFrameFromStruct(data)
-	if err != nil {
-		as.FailNowf(
-			"error generated when it created a new DataFrame",
-			"error: %s", err.Error())
+	if df = makeDataFrame(data, t); df == nil {
 		return
 	}
+
 
 	dhs := df.handler.(*dataHandlerStruct)
 	dhs.dataframe.order = []internalOrderColumn{
@@ -683,8 +649,9 @@ func Test_dataHandlerStruct_order_func(t *testing.T) {
 		{&dhs.dataframe.columns[1], DESC},
 	}
 	dhs.order()
-	dataOrdered := []dataStruct{
-		{1, 2}, {1, 1}, {2, 3}, {2, 3}, {2, 1}, {3, 5}, {3, 4}, {4, 1},
+	dataOrdered := []mockData{
+		{1, 2}, {1, 1}, {2, 3}, {2, 3},
+		{2, 1}, {3, 5}, {3, 4}, {4, 1},
 	}
 
 	for i, r := range dataOrdered {

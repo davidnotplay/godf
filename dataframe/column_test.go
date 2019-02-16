@@ -30,12 +30,15 @@ func Test_getColumnTypeFromString_func(t *testing.T) {
 func Test_getColumnTypeFromKind_func(t *testing.T) {
 	as := assert.New(t)
 	types := map[columnType][]interface{}{
-		INT: {100, int64(100), int32(100), int16(100), int8(100),
-			new(int), new(int64), new(int32), new(int16), new(int8)},
-		UINT: {uint(100), uint64(100), uint32(100), uint16(100), uint8(100),
-			new(uint), new(uint64), new(uint32), new(uint16), new(uint8)},
-		FLOAT: {float64(100), float32(100),
-			new(float64), new(float32)},
+		INT: {
+			100, int64(100), int32(100), int16(100), int8(100),
+			new(int), new(int64), new(int32), new(int16), new(int8),
+		},
+		UINT: {
+			uint(100), uint64(100), uint32(100), uint16(100), uint8(100),
+			new(uint), new(uint64), new(uint32), new(uint16), new(uint8),
+		},
+		FLOAT:   {float64(100), float32(100), new(float64), new(float32)},
 		COMPLEX: {complex128(100), complex64(100), new(complex128), new(complex64)},
 		STRING:  {"test", new(string)}}
 

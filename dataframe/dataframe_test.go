@@ -5,18 +5,55 @@ import (
 	"testing"
 )
 
+type mockData struct {
+	A int `colName:"a"`
+	B int `colName:"b"`
+}
+
+func makeDataFrameMockData(t *testing.T) (df *DataFrame, md []mockData){
+	var err error
+	md = []mockData{
+		{1, 1}, {1, 2}, {1, 3}, {1, 4}, {1, 5}, {1, 6},
+		{2, 1}, {2, 2}, {2, 3}, {2, 4}, {2, 5}, {2, 6},
+		{3, 1}, {3, 2}, {3, 3}, {3, 4}, {3, 5}, {3, 6},
+		{4, 1}, {4, 2}, {4, 3}, {4, 4}, {4, 5}, {4, 6},
+		{5, 1}, {5, 2}, {5, 3}, {5, 4}, {5, 5}, {5, 6},
+		{6, 1}, {6, 2}, {6, 3}, {6, 4}, {6, 5}, {6, 6},
+	}
+
+	df, err = NewDataFrameFromStruct(md)
+
+	if err != nil {
+		as := assert.New(t)
+		as.FailNow("error creating DataFrame", "error: %s", err.Error())
+	}
+
+	return
+}
+
+func makeDataFrame(data interface{}, t *testing.T) (df *DataFrame) {
+	var err error
+	df, err = NewDataFrameFromStruct(data)
+
+	if err != nil {
+		as := assert.New(t)
+		as.FailNow("error creating DataFrame", "error: %s", err.Error())
+	}
+
+	return
+}
+
 func Test_getColumnByName_func(t *testing.T) {
 	as := assert.New(t)
-
-	df, err := NewDataFrameFromStruct([]struct {
+	var df *DataFrame
+	data := []struct {
 		A int `colName:"a"`
 		a int
 		B float64 `colName:"b"`
 		C string  `colName:"c"`
-	}{})
+	}{}
 
-	if err != nil {
-		as.FailNowf("there an error creating the DataFrame", err.Error())
+	if df = makeDataFrame(data, t); df == nil {
 		return
 	}
 
@@ -39,13 +76,18 @@ func Test_getColumnByName_func(t *testing.T) {
 }
 
 func Test_Header_func(t *testing.T) {
+	var df *DataFrame
 	as := assert.New(t)
-	df, _ := NewDataFrameFromStruct([]struct {
+	data := []struct {
 		A int `colName:"a"`
 		a int
 		B float64 `colName:"b"`
 		C string  `colName:"c"`
-	}{})
+	}{}
+
+	if df = makeDataFrame(data, t); df == nil {
+		return
+	}
 
 	headers := df.Headers()
 	results := []string{"a", "b", "c"}
@@ -55,43 +97,23 @@ func Test_Header_func(t *testing.T) {
 }
 
 func Test_dataframe_len_func(t *testing.T) {
-	type dataStruct struct {
-		A int `colName:"a"`
-		B int `colName:"b"`
-	}
-
+	var df *DataFrame
+	var data []mockData
 	as := assert.New(t)
-	data := []dataStruct{
-		{3, 5}, {4, 1}, {1, 1}, {1, 2},
-	}
 
-	df, err := NewDataFrameFromStruct(data)
-	if err != nil {
-		as.FailNowf(
-			"error generated when it created a new DataFrame",
-			"error: %s", err.Error())
+
+	if df, data = makeDataFrameMockData(t); df == nil {
 		return
 	}
 
-	as.Equal(4, df.NumberRows(), "the dataframe length does not match.")
+	as.Equal(len(data), df.NumberRows(), "the dataframe length does not match.")
 }
 
 func Test_dataframe_iterator_func(t *testing.T) {
-	type dataStruct struct {
-		A int `colName:"a"`
-		B int `colName:"b"`
-	}
-
+	var df *DataFrame
 	as := assert.New(t)
-	data := []dataStruct{
-		{3, 5}, {4, 1}, {1, 1}, {1, 2},
-	}
 
-	df, err := NewDataFrameFromStruct(data)
-	if err != nil {
-		as.FailNowf(
-			"error generated when it created a new DataFrame",
-			"error: %s", err.Error())
+	if df, _ = makeDataFrameMockData(t); df == nil {
 		return
 	}
 
@@ -101,26 +123,17 @@ func Test_dataframe_iterator_func(t *testing.T) {
 }
 
 func Test_dataframe_order_func(t *testing.T) {
-	type dataStruct struct {
-		A int `colName:"a"`
-		B int `colName:"b"`
-	}
-
+	var df *DataFrame
 	as := assert.New(t)
-	data := []dataStruct{
-		{3, 5}, {4, 1}, {1, 1}, {1, 2}, {2, 3}, {2, 3}, {3, 4}, {2, 1},
-	}
+	data := []mockData{
+		{3, 5}, {4, 1}, {1, 1}, {1, 2}, {2, 3}, {2, 3}, {3, 4}, {2, 1}}
 
-	df, err := NewDataFrameFromStruct(data)
-	if err != nil {
-		as.FailNowf(
-			"error generated when it created a new DataFrame",
-			"error: %s", err.Error())
+	if df = makeDataFrame(data, t); df == nil {
 		return
 	}
 
 	df.Order(OrderColumn{"a", ASC}, OrderColumn{"b", DESC})
-	dataOrdered := []dataStruct{
+	dataOrdered := []mockData{
 		{1, 2}, {1, 1}, {2, 3}, {2, 3}, {2, 1}, {3, 5}, {3, 4}, {4, 1},
 	}
 

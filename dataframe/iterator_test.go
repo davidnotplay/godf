@@ -7,41 +7,22 @@ import (
 
 
 func Test_newIterator_func(t *testing.T) {
+	var df *DataFrame
 	as := assert.New(t)
-	data := []struct {
-		A int `colName:"a"`
-		B int `colName:"b"`
-	}{
-		{3, 5}, {4, 1},
-	}
-	df, err := NewDataFrameFromStruct(data)
-
-	if err != nil {
-		as.FailNowf(
-			"error generated when it created a new DataFrame",
-			"error: %s", err.Error())
+	if df, _ = makeDataFrameMockData(t); df == nil {
 		return
 	}
-
 	iterator := newIterator(df)
 	as.Equal(df, iterator.df, "the DataFrame addresses are differents")
 	as.Equal(0, iterator.pos, "the new iterator position is not 0")
 }
 
 func Test_Next_func(t *testing.T) {
+	var df *DataFrame
+	var data []mockData
 	as := assert.New(t)
-	data := []struct {
-		A int `colName:"a"`
-		B int `colName:"b"`
-	}{
-		{3, 5}, {4, 1}, {2, 2}, {3, 2},
-	}
-	df, err := NewDataFrameFromStruct(data)
 
-	if err != nil {
-		as.FailNowf(
-			"error generated when it created a new DataFrame",
-			"error: %s", err.Error())
+	if df, data = makeDataFrameMockData(t); df == nil {
 		return
 	}
 
@@ -71,19 +52,11 @@ func Test_Next_func(t *testing.T) {
 }
 
 func Test_Current_func(t *testing.T) {
+	var df *DataFrame
+	var data []mockData
 	as := assert.New(t)
-	data := []struct {
-		A int `colName:"a"`
-		B int `colName:"b"`
-	}{
-		{3, 5}, {4, 1}, {2, 2}, {3, 2},
-	}
-	df, err := NewDataFrameFromStruct(data)
 
-	if err != nil {
-		as.FailNowf(
-			"error generated when it created a new DataFrame",
-			"error: %s", err.Error())
+	if df, data = makeDataFrameMockData(t); df == nil {
 		return
 	}
 
@@ -107,19 +80,9 @@ func Test_Current_func(t *testing.T) {
 }
 
 func Test_Position_func(t *testing.T) {
+	var df *DataFrame
 	as := assert.New(t)
-	data := []struct {
-		A int `colName:"a"`
-		B int `colName:"b"`
-	}{
-		{3, 5}, {4, 1}, {2, 2}, {3, 2},
-	}
-	df, err := NewDataFrameFromStruct(data)
-
-	if err != nil {
-		as.FailNowf(
-			"error generated when it created a new DataFrame",
-			"error: %s", err.Error())
+	if df, _ = makeDataFrameMockData(t); df == nil {
 		return
 	}
 
@@ -135,19 +98,9 @@ func Test_Position_func(t *testing.T) {
 }
 
 func Test_Reset_func(t *testing.T) {
+	var df *DataFrame
 	as := assert.New(t)
-	data := []struct {
-		A int `colName:"a"`
-		B int `colName:"b"`
-	}{
-		{3, 5}, {4, 1}, {2, 2}, {3, 2},
-	}
-	df, err := NewDataFrameFromStruct(data)
-
-	if err != nil {
-		as.FailNowf(
-			"error generated when it created a new DataFrame",
-			"error: %s", err.Error())
+	if df, _ = makeDataFrameMockData(t); df == nil {
 		return
 	}
 
