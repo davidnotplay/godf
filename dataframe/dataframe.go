@@ -62,9 +62,41 @@ func (df *DataFrame) Headers() []string {
 	return header
 }
 
+// **** GETTERS ****
+
 // NumberRows returns the number of rows in DataFrame.
 func (df *DataFrame) NumberRows() int {
 	return df.handler.Len()
+}
+
+// Column returns the Values of a DataFrame column in an array.
+// Returns an error if the column does not exists.
+func (df *DataFrame) Column(colname string) ([]Value, error) {
+	return df.ColumnRange(colname, 0, df.NumberRows())
+}
+
+
+// ColumnRange returns the a values range of a DataFrame column in an array.
+// Returns an error if the column does not exists or the range index is invalid.
+func (df *DataFrame) ColumnRange(colname string, min, max int) ([]Value, error) {
+	// Check if column colname exists.
+	if _, ok := df.cIndexByName[colname]; !ok {
+		return nil, fmt.Errorf("column %s not found", colname)
+	}
+
+	iterator, err := df.IteratorRange(min, max)
+	if err != nil {
+		// invalid range index.
+		return nil, err
+	}
+
+	var values []Value
+	for row, cont := iterator.Next(); cont; row, cont = iterator.Next() {
+		value, _ := row.Cell(colname)
+		values = append(values, value)
+	}
+
+	return values, nil
 }
 
 // Iterator creates and returns a new Iterator to DataFrame data.
