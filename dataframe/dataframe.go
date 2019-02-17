@@ -4,21 +4,21 @@ import (
 	"fmt"
 )
 
-type DataFrame struct {
-	cIndexByName map[string]int
-	columns      []column
-	// @TODO cambiar el nombre de handler to dhandler
-	handler DataHandler
-	order   []internalOrderColumn
-}
-
 type DataHandler interface {
 	Get(row int, column string) (Value, error)
 	order() error
 	Len() int
 }
 
-// getColumnByName function returns the DataFrame column that his name
+type DataFrame struct {
+	cIndexByName map[string]int
+	columns      []column
+	// TODO: rename handler to dhandler.
+	handler DataHandler
+	order   []internalOrderColumn
+}
+
+// getColumnByName returns the DataFrame column that his name
 // match with the `coln` param. The second param returned is a flag
 // indicating if the column `coln` exists in DataFrame.
 func (df *DataFrame) getColumnByName(coln string) (*column, bool) {
@@ -29,6 +29,27 @@ func (df *DataFrame) getColumnByName(coln string) (*column, bool) {
 	}
 
 	return &df.columns[pos], true
+}
+
+// checkRange checks if the min and max range index are valid.
+// The min and max values are similar to slice range [min:max].
+// Whether min and max are valid returns nil.
+func (df *DataFrame) checkRange(min, max int) error {
+	if min < 0 || max < 0 {
+		return fmt.Errorf("index must be non-negative number")
+	}
+
+	if min > max {
+		return fmt.Errorf("max index < min index")
+	}
+
+	lenn := df.NumberRows()
+
+	if min > lenn || max > lenn {
+		return fmt.Errorf("index out of range")
+	}
+
+	return nil
 }
 
 // Headers returns the columns header of dataframe.
@@ -47,8 +68,15 @@ func (df *DataFrame) NumberRows() int {
 }
 
 // Iterator creates and returns a new Iterator to DataFrame data.
-func (df *DataFrame) Iterator() Iterator {
-	return Iterator{df, 0}
+func (df *DataFrame) Iterator() *Iterator {
+	iterator, _ := df.IteratorRange(0, df.NumberRows())
+	return iterator
+}
+
+// IteratorRange creates a new Iterator with the range specified in the parameters.
+// returns an error if the range values (min or max) are invalid.
+func (df *DataFrame) IteratorRange(min, max int) (*Iterator, error) {
+	return newIterator(df, min, max)
 }
 
 // Order the dataframe rows using the newOrder array.

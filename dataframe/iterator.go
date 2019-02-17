@@ -4,13 +4,21 @@ package dataframe
 type Iterator struct {
 	// DataFrame instance ptr.
 	df *DataFrame
-	// internal ptr indicating the row position in DataFrame.
+	// internal index indicating the row position in DataFrame.
 	pos int
+	// min position where it will start the iterator.
+	min int
+	// max position where it will finish the iterator.
+	max int
 }
 
-// newIterator creates a new Iterator.
-func newIterator(df *DataFrame) Iterator {
-	return Iterator{df, 0}
+// newIterator create a new iterator.
+// It returns an error if the min or max values are invalid.
+func newIterator(df *DataFrame, min, max int) (*Iterator, error) {
+	if err := df.checkRange(min, max); err != nil {
+		return nil, err
+	}
+	return &Iterator{df, min, min, max}, nil
 }
 
 // Next returns the current row of the iterator and advance one position.
@@ -27,7 +35,7 @@ func (it *Iterator) Next()(Row, bool) {
 
 // Current returns the current row.
 func (it *Iterator) Current() Row {
-	if it.pos >= it.df.handler.Len() {
+	if it.pos >= it.max {
 		return Row{nil, 0}
 	}
 
@@ -37,7 +45,7 @@ func (it *Iterator) Current() Row {
 
 // Reset func resets the iterator.
 func (it *Iterator) Reset() {
-	it.pos = 0
+	it.pos = it.min
 }
 
 //Position returns the current iterator position.

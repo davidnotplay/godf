@@ -44,8 +44,8 @@ func makeDataFrame(data interface{}, t *testing.T) (df *DataFrame) {
 }
 
 func Test_getColumnByName_func(t *testing.T) {
-	as := assert.New(t)
 	var df *DataFrame
+	as := assert.New(t)
 	data := []struct {
 		A int `colName:"a"`
 		a int
@@ -73,6 +73,57 @@ func Test_getColumnByName_func(t *testing.T) {
 	col, exists = df.getColumnByName("d")
 	as.Nil(col, "column d isn't exists, but the function returned data")
 	as.False(exists, "the column d isn't exists, but the function returned the column exists.")
+}
+
+func Test_DataFrame_checkRange(t *testing.T) {
+	var df *DataFrame
+	as := assert.New(t)
+
+	if df, _ = makeDataFrameMockData(t); df == nil {
+		return
+	}
+
+	dlen := df.NumberRows()
+
+	// negative numbers
+	err := df.checkRange(-1, 0)
+	as.Equal("index must be non-negative number", err.Error(), "error message is different")
+	err = df.checkRange(0, -1)
+	as.Equal("index must be non-negative number", err.Error(), "error message is different")
+	err = df.checkRange(-1, -1)
+	as.Equal("index must be non-negative number", err.Error(), "error message is different")
+
+	// max > min
+	err = df.checkRange(3, 0)
+	as.Equal("max index < min index", err.Error(), "error message is different")
+
+	// range index > data length
+	err = df.checkRange(0, dlen + 1)
+	as.Equal("index out of range", err.Error(), "error message is different")
+	err = df.checkRange(dlen + 1, dlen + 2)
+	as.Equal("index out of range", err.Error(), "error message is different")
+
+	// valid ranges
+	err = df.checkRange(0, 0)
+	if err != nil {
+		as.FailNow("error checking a valid range", "error: %s", err.Error())
+		return
+	}
+	err = df.checkRange(1, 1)
+	if err != nil {
+		as.FailNow("error checking a valid range", "error: %s", err.Error())
+		return
+	}
+	err = df.checkRange(0, 2)
+	if err != nil {
+		as.FailNow("error checking a valid range", "error: %s", err.Error())
+		return
+	}
+	err = df.checkRange(dlen, dlen)
+	if err != nil {
+		as.FailNow("error checking a valid range", "error: %s", err.Error())
+		return
+	}
 }
 
 func Test_Header_func(t *testing.T) {
@@ -120,6 +171,35 @@ func Test_dataframe_iterator_func(t *testing.T) {
 	iterator := df.Iterator()
 	as.Equal(df, iterator.df, "the dataframe addresses are differents")
 	as.Equal(0, iterator.pos, "the iterator position is not 0")
+	as.Equal(0, iterator.min, "the iterator min is not 0")
+	as.Equal(df.NumberRows(), iterator.max, "the iterator max is not the row numbers")
+}
+
+func Test_dataframe_IteartorRange_func(t *testing.T) {
+	var df *DataFrame
+	as := assert.New(t)
+
+	if df, _ = makeDataFrameMockData(t); df == nil {
+		return
+	}
+
+	iterator, err := df.IteratorRange(1, 2)
+	if err != nil {
+		as.FailNowf("error getting the iterator", "error: %s", err.Error())
+		return
+	}
+	as.Equal(df, iterator.df, "the dataframe addresses are differents")
+	as.Equal(1, iterator.pos, "the iterator position is not 1")
+	as.Equal(1, iterator.min, "the iterator min is not 1")
+	as.Equal(2, iterator.max, "the iterator max is not 2")
+
+
+	//iterator error
+	iterator, err = df.IteratorRange(-3, -2)
+	as.Nil(iterator, "the iterator must be nil, because there is an error when it be made.")
+	as.Equal(
+		"index must be non-negative number",
+		err.Error(), "the error message does not match")
 }
 
 func Test_dataframe_order_func(t *testing.T) {
