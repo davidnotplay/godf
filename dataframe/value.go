@@ -326,8 +326,8 @@ func (v *Value) IntType() (IntType, error) {
 	return r, nil
 }
 
-// toInt casts the v.value variable in a int. v.value variable only will cast in integer
-// if is type IntType. Any else type returns an error.
+// toInt casts the v.value variable in a int.
+// The variable only will cast in int if is type IntType. Any else type returns an error.
 func (v *Value) toInt() (int64, error) {
 	t, err := v.IntType()
 	return t.Value(), err
@@ -380,8 +380,8 @@ func (v *Value) UintType() (UintType, error) {
 	return r, nil
 }
 
-// toUint casts the v.value variable in a int. v.value variable only will cast in uint
-// if is type UintType. Any else type returns an error.
+// toUint casts the v.value variable in a uint.
+// The variable only will cast in uint if is type UinType. Any else type returns an error.
 func (v *Value) toUint() (uint64, error) {
 	i, err := v.UintType()
 	return i.Value(), err
@@ -434,8 +434,8 @@ func (v *Value) FloatType() (FloatType, error) {
 	return r, nil
 }
 
-// toFloat casts the v.value variable in a float. v.value variable only will cast in float
-// if is type IntType. Any else type returns an error.
+// toFloat casts the v.value variable in a float.
+// The variable only will cast in float if is type FloatType. Any else type returns an error.
 func (v *Value) toFloat() (float64, error) {
 	r, err := v.FloatType()
 	return r.Value(), err
@@ -467,8 +467,8 @@ func (v *Value) ComplexType() (ComplexType, error) {
 	return r, nil
 }
 
-// toComplex casts the v.value variable in a int. v.value variable only will cast in integer
-// if is type ComplexType. Any else type returns an error.
+// toComplex casts the v.value variable in a complex.
+// The variable only will cast in complex if is type ComplexType. Any else type returns an error.
 func (v *Value) toComplex() (complex128, error) {
 	i, err := v.ComplexType()
 	return i.Value(), err
