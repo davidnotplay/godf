@@ -7,7 +7,7 @@ import (
 // Row handles a row DataFrame.
 type Row struct {
 	// DataFrame instance ptr.
-	df * DataFrame
+	df *DataFrame
 	// Row index in DataFrame.
 	index int
 }
@@ -27,4 +27,3 @@ func newRow(df *DataFrame, index int) (Row, error) {
 func (r *Row) Cell(colname string) (Value, error) {
 	return r.df.handler.Get(r.index, colname)
 }
-

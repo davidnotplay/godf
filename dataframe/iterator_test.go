@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func makeIterator(df *DataFrame, min, max int, t *testing.T) *Iterator{
+func makeIterator(df *DataFrame, min, max int, t *testing.T) *Iterator {
 	iterator, err := newIterator(df, min, max)
 
 	if err != nil {
@@ -15,7 +15,6 @@ func makeIterator(df *DataFrame, min, max int, t *testing.T) *Iterator{
 
 	return iterator
 }
-
 
 func Test_newIterator_func(t *testing.T) {
 	var df *DataFrame
@@ -148,7 +147,6 @@ func Test_Current_func(t *testing.T) {
 	row = iterator.Current()
 	as.Nil(row.df, "the iterator has reached to the end. The row should be null")
 
-
 	// check with range
 	if iterator = makeIterator(df, 1, 4, t); iterator == nil {
 		return
@@ -191,13 +189,12 @@ func Test_Position_func(t *testing.T) {
 	}
 	as.Equalf(i, iterator.Position(), "the position %d is match with the iterator", i)
 
-
 	// check range
-	if iterator = makeIterator(df, 1, df.NumberRows() - 1, t); iterator == nil {
+	if iterator = makeIterator(df, 1, df.NumberRows()-1, t); iterator == nil {
 		return
 	}
 
-	for i = 1; i < df.handler.Len() - 1; i++ {
+	for i = 1; i < df.handler.Len()-1; i++ {
 		as.Equalf(i, iterator.Position(),
 			"the position %d is match with the iterator", i)
 		iterator.Next()
@@ -221,7 +218,6 @@ func Test_Reset_func(t *testing.T) {
 	as.NotEqual(0, iterator.pos, "the internal position has not been moded")
 	iterator.Reset()
 	as.Equal(0, iterator.pos, "the iterator has not been restarted")
-
 
 	// check range
 	if iterator = makeIterator(df, 2, df.NumberRows(), t); iterator == nil {

@@ -1,6 +1,25 @@
 package dataframe
 
-// Iterator allows walk all DataFrame rows easily.
+/*
+Iterator struct allows iterate the DataFrame rows and access to each of the row data orderly
+
+Example:
+	data := struct{
+		A int `colName:"a"`,
+		B float32 `colName:"b"`
+	}{
+		{1, 3.1},
+		{2, 3.2},
+		{3, 3.3},
+	}
+
+	df, err := NewDataFrameFromStruct(data)
+	iter := df.Iterator()
+
+	for row, cont := iter.Next(); cont; row, cont = iter.Next() {
+		// proccess the row
+	}
+*/
 type Iterator struct {
 	// DataFrame instance ptr.
 	df *DataFrame
@@ -24,7 +43,7 @@ func newIterator(df *DataFrame, min, max int) (*Iterator, error) {
 // Next returns the current row of the iterator and advance one position.
 // Whether the iterator can not advance more (is in the last row), then it returns false
 // as second argument.
-func (it *Iterator) Next()(Row, bool) {
+func (it *Iterator) Next() (Row, bool) {
 	row := it.Current()
 	if row.df == nil {
 		return row, false
@@ -43,7 +62,7 @@ func (it *Iterator) Current() Row {
 	return row
 }
 
-// Reset func resets the iterator.
+// Reset resets the iterator.
 func (it *Iterator) Reset() {
 	it.pos = it.min
 }
@@ -52,4 +71,3 @@ func (it *Iterator) Reset() {
 func (it *Iterator) Position() int {
 	return it.pos
 }
-

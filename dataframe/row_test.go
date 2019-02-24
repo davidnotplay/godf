@@ -1,8 +1,8 @@
 package dataframe
 
 import (
-	"github.com/stretchr/testify/assert"
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 

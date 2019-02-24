@@ -98,8 +98,6 @@ func Test_NewDataFrameFromStruct_func_Struct(t *testing.T) {
 	}
 	data := []s{}
 
-
-
 	if df = makeDataFrame(data, t); df == nil {
 		return
 	}
@@ -279,24 +277,6 @@ func Test_parseValue_func(t *testing.T) {
 		}
 	}
 	/** @TODO testear errores y panic */
-}
-
-func Test_makeRange(t *testing.T) {
-	as := assert.New(t)
-
-	a := makeRange(2, 5)
-	r := []int{2, 3, 4, 5}
-	as.Equal(len(r), len(a), "the number of elements in slice is different")
-	for _, e := range r {
-		as.Containsf(a, e, "the slice doesn't contains the number %d", e)
-	}
-
-	a = makeRange(121, 129)
-	r = []int{121, 122, 123, 124, 125, 126, 127, 128, 129}
-	as.Equal(len(r), len(a), "the number of elements in slice is different")
-	for _, e := range r {
-		as.Containsf(a, e, "the slice doesn't contains the number %d", e)
-	}
 }
 
 // Test_NewDataFrameFromStruct_func_dataHandler checks the dataHandlerStruct struct stored in
@@ -524,7 +504,7 @@ func Test_Swap_func(t *testing.T) {
 
 	dhs := df.handler.(*dataHandlerStruct)
 	// get the integers value of the DataFrame row, position i.
-	fv := func(i int)(a int, b int) {
+	fv := func(i int) (a int, b int) {
 		row := dhs.data[i]
 		cella := row["a"]
 		cellb := row["b"]
@@ -581,14 +561,13 @@ func Test_Less_func(t *testing.T) {
 
 	floop := func(fcheck func(mockData, mockData) bool) {
 		l := len(md)
-		msg :="differents results comparing position %d and %d"
+		msg := "differents results comparing position %d and %d"
 		for i := 0; i < l; i++ {
 			for j := 0; j < l; j++ {
 				as.Equalf(fcheck(md[i], md[j]), dhs.Less(i, j), msg, i, j)
 			}
 		}
 	}
-
 
 	// single column ASC
 	dhs.dataframe.order = []internalOrderColumn{{&dhs.dataframe.columns[0], ASC}}
@@ -607,7 +586,7 @@ func Test_Less_func(t *testing.T) {
 	}
 	dhs.prepareOrderFuncs()
 	floop(func(i, j mockData) bool {
-		if (i.A == j.A) {
+		if i.A == j.A {
 			return i.B < j.B
 		}
 
@@ -621,7 +600,7 @@ func Test_Less_func(t *testing.T) {
 	}
 	dhs.prepareOrderFuncs()
 	floop(func(i, j mockData) bool {
-		if (j.A == i.A) {
+		if j.A == i.A {
 			return j.B < i.B
 		}
 
@@ -642,13 +621,12 @@ func Test_dataHandlerStruct_order_func(t *testing.T) {
 		return
 	}
 
-
 	dhs := df.handler.(*dataHandlerStruct)
 	dhs.dataframe.order = []internalOrderColumn{
 		{&dhs.dataframe.columns[0], ASC},
 		{&dhs.dataframe.columns[1], DESC},
 	}
-	dhs.order()
+	dhs.Order()
 	dataOrdered := []mockData{
 		{1, 2}, {1, 1}, {2, 3}, {2, 3},
 		{2, 1}, {3, 5}, {3, 4}, {4, 1},

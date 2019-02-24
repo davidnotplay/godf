@@ -6,7 +6,7 @@ import (
 	"sort"
 )
 
-// dataHasValidType check if `data` is:
+// dataHasValidType checks if `data` is:
 //	- array
 //	- slice
 //	- array ptr
@@ -27,7 +27,7 @@ func dataHasValidType(data interface{}) bool {
 	return tk == reflect.Array || tk == reflect.Slice
 }
 
-// getStructOfData get the struct type of the `data` *array*.
+// getStructOfData gets the struct type of the `data` *array*.
 // param `data` must be:
 //	- array with struct as datatype
 //	- slice with struct as datatype
@@ -57,14 +57,12 @@ func getStructOfData(data interface{}) (reflect.Type, error) {
 	return t, nil
 }
 
-// isExportableField Check if `sf` is an exportable struct field.
+// isExportableField checks if `sf` is an exportable struct field.
 func isExportableField(sf reflect.StructField) bool {
 	return sf.PkgPath == ""
 }
 
-/**
-@TODO comentar función
-*/
+// NewDataFrameFromStruct creates a new DataFrame using a struct array as data.
 func NewDataFrameFromStruct(data interface{}) (*DataFrame, error) {
 	dt, err := getStructOfData(data)
 
@@ -112,28 +110,18 @@ func NewDataFrameFromStruct(data interface{}) (*DataFrame, error) {
 	return &df, nil
 }
 
+// dataHandlerStruct struct handles the data stored in the struct array.
 type dataHandlerStruct struct {
-	dataframe  *DataFrame
-	data       []map[string]Value
+	// Ptr to the dataframe object.
+	dataframe *DataFrame
+	// Map array with all data in DataFrame.
+	data []map[string]Value
+	// Array with the function to order the DataFrame rows.
 	orderFuncs []func(a Value, b Value) (Comparers, error)
 }
 
-// makeRange makes an slice of consecutive numbers from min param to max param;
-// both numbers included.
-// @TODO USELESS?
-func makeRange(min, max int) []int {
-	r := make([]int, max-min+1)
-
-	for i := range r {
-		r[i] = min + i
-	}
-
-	return r
-}
-
-// parseValue transforms fieldv in a value Type (IntType, FloatType...),
-// it stores the value transformed  in a Value struct and returns the Value struct.
-// The `col` param has info to transforms the fieldv in a Value struct.
+// parseValue transforms fieldv in a *ValueTypes*, it stores the value transformed in a Value
+// struct and returns the Value struct. The `col` param has info to transforms the fieldv.
 func parseValue(fieldv reflect.Value, col column) (*Value, error) {
 	var (
 		value *Value
@@ -169,8 +157,7 @@ func parseValue(fieldv reflect.Value, col column) (*Value, error) {
 	return value, nil
 }
 
-// newDataHandlerStruct func makes a new dataHandlerStruct using the *in* arguments as
-// struct field.
+// newDataHandlerStruct makes a new dataHandlerStruct using the arguments as struct field.
 func newDataHandlerStruct(df *DataFrame, data interface{}) (*dataHandlerStruct, error) {
 	dv := reflect.ValueOf(data)
 	dh := dataHandlerStruct{}
@@ -195,11 +182,7 @@ func newDataHandlerStruct(df *DataFrame, data interface{}) (*dataHandlerStruct, 
 	return &dh, nil
 }
 
-/**
-	Funcs to get the data.
-*/
-
-// Get func retrieves a concrete value from the DataFrame, using the value row and the value column.
+// Get retrieves a concrete value from the DataFrame.
 // If the row or the column is invalid then it returns an error.
 func (dh *dataHandlerStruct) Get(row int, column string) (Value, error) {
 	if len(dh.data) <= row {
@@ -214,13 +197,8 @@ func (dh *dataHandlerStruct) Get(row int, column string) (Value, error) {
 	return dh.data[row][column], nil
 }
 
-/**
-	Funcs to order the data.
-*/
-
-// prepareOrderFuncs funcs make the array `dataHandlerStruct` with functions they compare two
-// values. The comparer functions depends of the columns will use to compare.
-// This columns are defined in `dh.dataframe.order`
+// prepareOrderFuncs makes the array orderFuncs in dataHandlerStruct.
+// The comparer functions made depends of the DataFrame order defined in `dh.dataframe.order`
 func (dh *dataHandlerStruct) prepareOrderFuncs() {
 	oColumns := dh.dataframe.order
 	dh.orderFuncs = []func(a, b Value) (Comparers, error){}
@@ -268,22 +246,19 @@ func (dh *dataHandlerStruct) prepareOrderFuncs() {
 	}
 }
 
-// Len func returns the number of rows in dataframe.
+// Len returns the number of rows in dataframe.
 func (dh *dataHandlerStruct) Len() int {
 	return len(dh.data)
 }
 
-// Swap func swaps the i and j dataframe rows
-// This func is necessary to order the dataframe by columns.
+// Swap swaps the i and j dataframe rows.
 func (dh *dataHandlerStruct) Swap(i, j int) {
 	dh.data[i], dh.data[j] = dh.data[j], dh.data[i]
 }
 
 // Less returns true if the row i is more less than j row.
-// To compare both rows use the `orderFuncs` array made in the function `prepareOrderFuncs`
-// This func is necessary to order the dataframe by columns.
+// To compare both rows use the `orderFuncs` array.
 func (dh *dataHandlerStruct) Less(i, j int) bool {
-
 	for indx, f := range dh.orderFuncs {
 		ocol := dh.dataframe.order[indx]
 		valuei, _ := dh.Get(i, ocol.column.name)
@@ -311,8 +286,8 @@ func (dh *dataHandlerStruct) Less(i, j int) bool {
 	return false
 }
 
-// order func Orders the dataframe rows using the order stored in `dh.dataframe.order`
-func (dh *dataHandlerStruct) order() error {
+// Order func Orders the dataframe rows using the order stored in `dh.dataframe.order`
+func (dh *dataHandlerStruct) Order() error {
 	if len(dh.dataframe.order) == 0 {
 		return nil // there isn't order defined.
 	}

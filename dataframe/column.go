@@ -5,9 +5,10 @@ import (
 	"reflect"
 )
 
-// Type used for the dataframe columns.
+// columnType indicates the basic type of the column.
 type columnType string
 
+// Constans with the valid basic types for the columns.
 const (
 	INT     columnType = "int"
 	UINT    columnType = "uint"
@@ -16,7 +17,7 @@ const (
 	STRING  columnType = "string"
 )
 
-// getColumnTypeFromString returns one of the columnType constant.
+// getColumnTypeFromString returns one of the columnType constant depending of the param.
 // Whether `str` param isn't match with any columnType returns an error.
 func getColumnTypeFromString(str string) (columnType, error) {
 	coltype := columnType(str)
@@ -29,7 +30,7 @@ func getColumnTypeFromString(str string) (columnType, error) {
 	}
 }
 
-// getColumnTypeFromType get a columType const, depending of the t param.
+// getColumnTypeFromType gets a columType const depending of the t param.
 // t params must contains one of the next types:
 // 	- basic type: (int, uint, float, complex, string)
 //	- struct or interface that implements a ValueType (IntType, FloatType...)
@@ -103,6 +104,7 @@ func (c columnType) Kind() reflect.Kind {
 	}
 }
 
+// column is the struct used in the DataFrame column.
 type column struct {
 	// column name
 	name string
@@ -114,19 +116,39 @@ type column struct {
 	basicType bool
 }
 
+// orderType is the type used when it defines the order of the DataFrame rows.
 type orderType int8
 
+// The valid order types.
 const (
 	ASC  orderType = 1
 	DESC orderType = 2
 )
 
+// internalOrderColumn is the internal struct used to stored the order of the DataFrame rows.
 type internalOrderColumn struct {
 	column *column
 	order  orderType
 }
 
+/*
+OrderColumn is the struct used to define the order of the DataFrame rows.
+
+Example:
+	data := struct{
+		A int `colName:"a"`
+		B int `colName:"b"`
+	}{
+		{1, 1},
+		{2, 2},
+		{1, 2},
+	}
+
+	df, _ := NewDataFrameFromStruct(data)
+
+	df.Order(OrderColumn{"a", ASC}, OrderColumn{"b", DESC})
+*/
 type OrderColumn struct {
-	Name  string
-	Order orderType
+	Name  string    // Column name
+	Order orderType // Order type
 }

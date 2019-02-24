@@ -10,7 +10,7 @@ type mockData struct {
 	B int `colName:"b"`
 }
 
-func makeDataFrameMockData(t *testing.T) (df *DataFrame, md []mockData){
+func makeDataFrameMockData(t *testing.T) (df *DataFrame, md []mockData) {
 	var err error
 	md = []mockData{
 		{1, 1}, {1, 2}, {1, 3}, {1, 4}, {1, 5}, {1, 6},
@@ -98,9 +98,9 @@ func Test_DataFrame_checkRange(t *testing.T) {
 	as.Equal("max index < min index", err.Error(), "error message is different")
 
 	// range index > data length
-	err = df.checkRange(0, dlen + 1)
+	err = df.checkRange(0, dlen+1)
 	as.Equal("index out of range", err.Error(), "error message is different")
-	err = df.checkRange(dlen + 1, dlen + 2)
+	err = df.checkRange(dlen+1, dlen+2)
 	as.Equal("index out of range", err.Error(), "error message is different")
 
 	// valid ranges
@@ -152,7 +152,6 @@ func Test_dataframe_NumberRows_func(t *testing.T) {
 	var data []mockData
 	as := assert.New(t)
 
-
 	if df, data = makeDataFrameMockData(t); df == nil {
 		return
 	}
@@ -164,7 +163,6 @@ func Test_DataFrame_Column_func(t *testing.T) {
 	var df *DataFrame
 	var data []mockData
 	as := assert.New(t)
-
 
 	if df, data = makeDataFrameMockData(t); df == nil {
 		return
@@ -209,7 +207,6 @@ func Test_DataFrame_ColumnRange_func(t *testing.T) {
 	var df *DataFrame
 	var data []mockData
 	as := assert.New(t)
-
 
 	if df, data = makeDataFrameMockData(t); df == nil {
 		return
@@ -287,7 +284,6 @@ func Test_dataframe_IteartorRange_func(t *testing.T) {
 	as.Equal(1, iterator.pos, "the iterator position is not 1")
 	as.Equal(1, iterator.min, "the iterator min is not 1")
 	as.Equal(2, iterator.max, "the iterator max is not 2")
-
 
 	//iterator error
 	iterator, err = df.IteratorRange(-3, -2)
