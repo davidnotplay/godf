@@ -237,7 +237,7 @@ func (dh *dataHandlerStruct) prepareOrderFuncs() {
 		case STRING:
 			f = func(a, b Value) (Comparers, error) {
 				i, _ := a.StringType()
-				v, _ := b.String()
+				v, _ := b.Str()
 				return i.Compare(v), nil
 			}
 		}

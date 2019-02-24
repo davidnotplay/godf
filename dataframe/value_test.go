@@ -6,6 +6,17 @@ import (
 	"testing"
 )
 
+func makeTestValue(v interface{}, t *testing.T) *Value {
+	value, err := newValue(v)
+
+	if err != nil {
+		assert.FailNowf(t, "error creating a value", "error: %s", err.Error())
+		return nil
+	}
+
+	return value
+}
+
 func Test_simpleIntType_struct(t *testing.T) {
 	as := assert.New(t)
 	var i IntType = simpleIntType{v: 1000}
@@ -429,18 +440,39 @@ func Test_StringType_func(t *testing.T) {
 		"There is an error, the value must be an empty string")
 }
 
-func Test_String_func(t *testing.T) {
+func Test_Str_func(t *testing.T) {
 	as := assert.New(t)
 
 	// Getting the int value.
 	v, _ := newValue(simpleStringType{"test"})
-	s, err := v.String()
+	s, err := v.Str()
 	as.Nil(err, "there is an error fetching the integer data")
 	as.Equal("test", s, "the number returned isn't match")
 
 	// Error transforming the value in int.
 	v, _ = newValue(simpleUintType{3})
-	s, err = v.String()
+	s, err = v.Str()
 	as.Equal("", s, "the value must be 0 when there is an error")
 	as.Equal("value type is not string", err.Error(), "the error message isn't match")
+}
+
+func Test_Value_String_func(t *testing.T) {
+	as := assert.New(t)
+
+	genTest := func(v interface{}, expected, vtype string) {
+		value := makeTestValue(v, t)
+		if v == nil {
+			return
+		}
+		as.Equal(
+			expected, value.String(),
+			"error casting the type %s to string", vtype)
+	}
+
+	genTest(simpleIntType{-3}, "-3", "int")
+	genTest(simpleUintType{3}, "3", "uint")
+	genTest(simpleFloatType{3}, "3", "float")
+	genTest(simpleFloatType{3.323233}, "3.323233", "float")
+	genTest(simpleComplexType{3.2 -3i}, "3.2-3i", "complex")
+	genTest(simpleStringType{"test"}, "test", "string")
 }

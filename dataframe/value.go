@@ -500,9 +500,21 @@ func (v *Value) StringType() (StringType, error) {
 	return r, nil
 }
 
-// String casts the v.value variable in a string. v.value variable only will cast in string
+// Str casts the v.value variable in a string. v.value variable only will cast in string
 // if is type StringType. Any else type returns an error.
-func (v *Value) String() (string, error) {
+func (v *Value) Str() (string, error) {
 	i, err := v.StringType()
 	return i.Value(), err
+}
+
+// String casts all valid values to string and return they.
+// If the value is not valid then throw and panic error.
+func (v *Value) String() string {
+	val, ok := v.value.(BaseType)
+
+	if !ok {
+		panic("value is not a ValueTypes")
+	}
+
+	return val.String()
 }

@@ -230,7 +230,7 @@ func Test_parseValue_func(t *testing.T) {
 			c, _ := valueObj.Complex128()
 			as.Equal(value, c, "the value isn't match")
 		case STRING:
-			s, _ := valueObj.String()
+			s, _ := valueObj.Str()
 			as.Equal(value, s, "the value isn't match")
 		}
 	}
@@ -271,7 +271,7 @@ func Test_parseValue_func(t *testing.T) {
 			value := value.(ComplexType)
 			as.Equal(value.Value(), c, "the value isn't match")
 		case STRING:
-			s, _ := valueObj.String()
+			s, _ := valueObj.Str()
 			value := value.(StringType)
 			as.Equal(value.Value(), s, "the value isn't match")
 		}
@@ -326,7 +326,7 @@ func Test_NewDataFrameFromStruct_func_dataHandler(t *testing.T) {
 	if !ok {
 		as.FailNow("error in column s", "column s not found")
 	}
-	s, err := v.String()
+	s, err := v.Str()
 	if err != nil {
 		as.FailNow("error fetching the value", err.Error())
 	}
@@ -359,7 +359,7 @@ func Test_NewDataFrameFromStruct_func_dataHandler(t *testing.T) {
 	if !ok {
 		as.FailNow("error in column s", "column s not found")
 	}
-	s, err = v.String()
+	s, err = v.Str()
 	if err != nil {
 		as.FailNow("error fetching the value", err.Error())
 	}
@@ -400,7 +400,7 @@ func Test_dataHandlerStruct_Get_func(t *testing.T) {
 		return
 	}
 
-	s, _ := value.String()
+	s, _ := value.Str()
 	as.Equal("test2", s, "the value fecthed is wrong")
 
 	// invalid row
