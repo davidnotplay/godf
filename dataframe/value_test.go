@@ -473,6 +473,6 @@ func Test_Value_String_func(t *testing.T) {
 	genTest(simpleUintType{3}, "3", "uint")
 	genTest(simpleFloatType{3}, "3", "float")
 	genTest(simpleFloatType{3.323233}, "3.323233", "float")
-	genTest(simpleComplexType{3.2 -3i}, "3.2-3i", "complex")
+	genTest(simpleComplexType{3.2 - 3i}, "3.2-3i", "complex")
 	genTest(simpleStringType{"test"}, "test", "string")
 }
