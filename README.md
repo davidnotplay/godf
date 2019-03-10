@@ -98,4 +98,10 @@ type MyStruct {
 df, _ := NewDataFrameFromStruct(data)
 ```
 
+Documentation
+=============
+
+[Offical documentation](https://godoc.org/github.com/davidnotplay/godf)
+
+
 *wip...*
