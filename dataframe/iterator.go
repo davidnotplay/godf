@@ -29,6 +29,8 @@ type Iterator struct {
 	min int
 	// max position where it will finish the iterator.
 	max int
+	// Index number. Start in 0 and increment in one with each iteration (Next function)
+	index int
 }
 
 // newIterator create a new iterator.
@@ -37,7 +39,7 @@ func newIterator(df *DataFrame, min, max int) (*Iterator, error) {
 	if err := df.checkRange(min, max); err != nil {
 		return nil, err
 	}
-	return &Iterator{df, min, min, max}, nil
+	return &Iterator{df, min, min, max, 0}, nil
 }
 
 // Next returns the current row of the iterator and advance one position.
@@ -49,6 +51,7 @@ func (it *Iterator) Next() (Row, bool) {
 		return row, false
 	}
 	it.pos++
+	it.index++
 	return row, true
 }
 
@@ -65,9 +68,15 @@ func (it *Iterator) Current() Row {
 // Reset resets the iterator.
 func (it *Iterator) Reset() {
 	it.pos = it.min
+	it.index = 0
 }
 
 //Position returns the current iterator position.
 func (it *Iterator) Position() int {
 	return it.pos
+}
+
+// Index returns the Iterator index.
+func (it *Iterator) Index() int {
+	return it.index
 }
