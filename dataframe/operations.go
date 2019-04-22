@@ -2,6 +2,7 @@ package dataframe
 
 import (
 	"fmt"
+	"math"
 )
 
 // OperationBase is the base struct for all operations.
@@ -154,6 +155,190 @@ func (df *DataFrame)Sum(colname string) (interface{}, error) {
 	return df.SumRange(colname, 0, df.NumberRows())
 }
 
+// OperationIntMinOrMax is a struct that calculates the min or
+// the max of a Dataframe column of type int
+type OperationIntMinOrMax struct {
+	OperationBaseInt
+	cvalue Comparers
+}
+
+// F checks if column value in the row is more great or less than the value of the struct.
+func (o *OperationIntMinOrMax)F(r *Row) error {
+	v, _ := r.Cell(o.colName)
+	itype, _ := v.IntType()
+
+	if itype.Compare(o.Total) == o.cvalue {
+		o.Total = itype.Value()
+	}
+
+	return nil
+}
+
+// OperationIntMinOrMax is a struct that calculates the min or
+// the max of a Dataframe column of type uint
+type OperationUintMinOrMax struct {
+	OperationBaseUint
+	cvalue Comparers
+}
+
+// F checks if column value in the row is more great or less than the value of the struct.
+func (o *OperationUintMinOrMax)F(r *Row) error {
+	v, _ := r.Cell(o.colName)
+	utype, _ := v.UintType()
+
+	if utype.Compare(o.Total) == o.cvalue {
+		o.Total = utype.Value()
+	}
+
+	return nil
+}
+
+// OperationIntMinOrMax is a struct that calculates the min or
+// the max of a Dataframe column of type float
+type OperationFloatMinOrMax struct {
+	OperationBaseFloat
+	cvalue Comparers
+}
+
+// F checks if column value in the row is more great or less than the value of the struct.
+func (o *OperationFloatMinOrMax)F(r *Row) error {
+	v, _ := r.Cell(o.colName)
+	ftype, _ := v.FloatType()
+
+	if ftype.Compare(o.Total) == o.cvalue {
+		o.Total = ftype.Value()
+	}
+
+	return nil
+}
+
+// OperationIntMinOrMax is a struct that calculates the min or
+// the max of a Dataframe column of type complex
+type OperationComplexMinOrMax struct {
+	OperationBaseComplex
+	cvalue Comparers
+}
+
+// F checks if column value in the row is more great or less than the value of the struct.
+func (o *OperationComplexMinOrMax)F(r *Row) error {
+	v, _ := r.Cell(o.colName)
+	ctype, _ := v.ComplexType()
+
+	if ctype.Compare(o.Total) == o.cvalue {
+		o.Total = ctype.Value()
+	}
+
+	return nil
+}
+
+// operationMinOrMax returns the min or max, depending of the bool isMin, of the DataFrame column,
+// in the range rows between min or max parameters.
+func (df *DataFrame) operationMinOrMax(
+	isMin bool, colName string, min, max int,
+) (interface{}, error) {
+	column, exists := df.getColumnByName(colName)
+	if !exists {
+		return nil, fmt.Errorf("column %s not found", colName)
+	}
+
+	comparer := LESS
+	if !isMin {
+		comparer = GREAT
+	}
+
+	switch column.ctype {
+	case INT:
+		var value int64 = math.MaxInt64
+		if !isMin {
+			value = math.MinInt64
+		}
+
+		op := OperationIntMinOrMax{
+			OperationBaseInt{OperationBase{colName}, value},
+			comparer,
+		}
+
+		if err := df.OperationRange(&op, min, max); err != nil {
+			return int64(0), err
+		}
+
+		return op.Total, nil
+
+	case UINT:
+		var value uint64 = math.MaxUint64
+		if !isMin {
+			value = 0
+		}
+
+		op := OperationUintMinOrMax{
+			OperationBaseUint{OperationBase{colName}, value},
+			comparer,
+		}
+
+		if err := df.OperationRange(&op, min, max); err != nil {
+			return uint64(0), err
+		}
+
+		return op.Total, nil
+
+	case FLOAT:
+		var value float64 = math.MaxFloat64
+		if !isMin {
+			value = math.SmallestNonzeroFloat64
+		}
+
+		op := OperationFloatMinOrMax{
+			OperationBaseFloat{OperationBase{colName}, value},
+			comparer,
+		}
+		if err := df.OperationRange(&op, min, max); err != nil {
+			return float64(0), err
+		}
+		return op.Total, nil
+
+	case COMPLEX:
+		var value complex128 = complex(math.MaxFloat64, math.MaxFloat64)
+		if !isMin {
+			value = complex(math.SmallestNonzeroFloat64, math.SmallestNonzeroFloat64)
+		}
+
+		op := OperationComplexMinOrMax{
+			OperationBaseComplex{OperationBase{colName}, value},
+			comparer,
+		}
+		if err := df.OperationRange(&op, min, max); err != nil {
+			return 0 + 0i, err
+		}
+
+		return op.Total, nil
+
+	default:
+		return nil, fmt.Errorf("Sum operation is invalid in column type %s", column.ctype)
+	}
+}
+
+// MaxRange returns the max of the colName DataFrame column,
+// in the range rows between min or max parameters.
+func (df *DataFrame) MaxRange(colName string, min, max int) (interface{}, error) {
+	return df.operationMinOrMax(false, colName, min, max)
+}
+
+// Max returns the max of the colName DataFrame column,
+func (df *DataFrame) Max(colName string) (interface{}, error) {
+	return df.operationMinOrMax(false, colName, 0, df.NumberRows())
+}
+
+// MinRange returns the max of the colName DataFrame column,
+// in the range rows between min or max parameters.
+func (df *DataFrame) MinRange(colName string, min, max int) (interface{}, error) {
+	return df.operationMinOrMax(true, colName, min, max)
+}
+
+// Min returns the max of the colName DataFrame column,
+func (df *DataFrame) Min(colName string) (interface{}, error) {
+	return df.operationMinOrMax(true, colName, 0, df.NumberRows())
+}
+
 /*
 Operation interface it is used to craete custom operations with the DataFrame rows.
 This interface is used in combination with the DataFrame method Operation and OperationRange.
@@ -163,4 +348,3 @@ type Operation interface {
 	// current row of the DataFrame iterator.
 	F(*Row) error
 }
-

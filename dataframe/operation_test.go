@@ -163,3 +163,244 @@ func Test_DataFrame_Sum_func(t *testing.T) {
 		"Sum operation is invalid in column type string",
 		"invalid error message")
 }
+
+func Test_DataFrame_MaxRange_func(t *testing.T) {
+	var (
+		df *DataFrame
+		err error
+		value interface{}
+	)
+	as := assert.New(t)
+
+	if df = getDataFrameToColumns(t); df == nil {
+		return
+	}
+
+	expectedR := map[string]interface{}{
+		"col A": int64(-2),
+		"col B": uint64(3),
+		"col C": float32(3.333),
+		"col D": 3.3 - 3.3i,
+	}
+
+	for colName, expected := range expectedR {
+		value, err = df.MaxRange(colName, 1, 3)
+
+		if err != nil {
+			as.FailNowf("there an error", "error %s", err.Error)
+		}
+
+		switch v := value.(type) {
+		case int64, uint64, complex128:
+			as.Equalf(v, expected, "the value of colname %s isn't valid", colName)
+		case float64:
+			// float is special case. bad rounded.
+			as.Equalf(
+				float32(v),
+				expected,
+				"the value of colname %s isn't valid",
+				colName,
+			)
+		default:
+			as.FailNow("type not found")
+		}
+	}
+
+	// error iterator
+	expectedR = map[string]interface{}{
+		"col A": int64(0),
+		"col B": uint64(0),
+		"col C": float64(0),
+		"col D": 0 + 0i,
+	}
+
+	for colName, expected := range expectedR {
+		value, err = df.MaxRange(colName, -1, 3)
+		as.Equal(value, expected, "must be 0 because there is an error")
+		as.Equal(
+			err.Error(),
+			"index must be non-negative number",
+			"the error is invalid",
+		)
+	}
+
+	// error invalid column
+	value, err = df.MaxRange("invalid", 1, 3)
+	as.Nil(value, "there is an error, value must be nil")
+	as.Equal(
+		err.Error(),
+		"column invalid not found",
+		"the error message does not match",
+	)
+
+}
+
+func Test_DataFrame_Max_func(t *testing.T) {
+	var (
+		df *DataFrame
+		err error
+		value interface{}
+	)
+	as := assert.New(t)
+
+	if df = getDataFrameToColumns(t); df == nil {
+		return
+	}
+
+	expectedR := map[string]interface{}{
+		"col A": int64(-1),
+		"col B": uint64(9),
+		"col C": float32(9.999),
+		"col D": 9.9 - 9.9i,
+	}
+
+	for colName, expected := range expectedR {
+		value, err = df.Max(colName)
+
+		if err != nil {
+			as.FailNowf("there an error", "error %s", err.Error)
+		}
+
+		switch v := value.(type) {
+		case int64, uint64, complex128:
+			as.Equalf(v, expected, "the value of colname %s isn't valid", colName)
+		case float64:
+			// float is special case. bad rounded.
+			as.Equalf(float32(v), expected, "the value of colname %s isn't valid", colName)
+		default:
+			as.FailNow("type not found")
+		}
+	}
+
+	// error invalid column
+	value, err = df.MaxRange("invalid", 1, 3)
+	as.Nil(value, "there is an error, value must be nil")
+	as.Equal(
+		err.Error(),
+		"column invalid not found",
+		"the error message does not match",
+	)
+
+}
+
+func Test_DataFrame_MinRange_func(t *testing.T) {
+	var (
+		df *DataFrame
+		err error
+		value interface{}
+	)
+	as := assert.New(t)
+
+	if df = getDataFrameToColumns(t); df == nil {
+		return
+	}
+
+	expectedR := map[string]interface{}{
+		"col A": int64(-3),
+		"col B": uint64(2),
+		"col C": float32(2.222),
+		"col D": 2.2 - 2.2i,
+	}
+
+	for colName, expected := range expectedR {
+		value, err = df.MinRange(colName, 1, 3)
+
+		if err != nil {
+			as.FailNowf("there an error", "error %s", err.Error)
+		}
+
+		switch v := value.(type) {
+		case int64, uint64, complex128:
+			as.Equalf(v, expected, "the value of colname %s isn't valid", colName)
+		case float64:
+			// float is special case. bad rounded.
+			as.Equalf(
+				float32(v),
+				expected,
+				"the value of colname %s isn't valid",
+				colName,
+			)
+		default:
+			as.FailNow("type not found")
+		}
+	}
+
+	// error iterator
+	expectedR = map[string]interface{}{
+		"col A": int64(0),
+		"col B": uint64(0),
+		"col C": float64(0),
+		"col D": 0 + 0i,
+	}
+
+	for colName, expected := range expectedR {
+		value, err = df.MinRange(colName, -1, 3)
+		as.Equal(value, expected, "must be 0 because there is an error")
+		as.Equal(
+			err.Error(),
+			"index must be non-negative number",
+			"the error is invalid",
+		)
+	}
+
+	// error invalid column
+	value, err = df.MinRange("invalid", 1, 3)
+	as.Nil(value, "there is an error, value must be nil")
+	as.Equal(
+		err.Error(),
+		"column invalid not found",
+		"the error message does not match",
+	)
+}
+
+func Test_DataFrame_Min_func(t *testing.T) {
+	var (
+		df *DataFrame
+		err error
+		value interface{}
+	)
+	as := assert.New(t)
+
+	if df = getDataFrameToColumns(t); df == nil {
+		return
+	}
+
+	expectedR := map[string]interface{}{
+		"col A": int64(-9),
+		"col B": uint64(1),
+		"col C": float32(1.111),
+		"col D": 1.1 - 1.1i,
+	}
+
+	for colName, expected := range expectedR {
+		value, err = df.Min(colName)
+
+		if err != nil {
+			as.FailNowf("there an error", "error %s", err.Error)
+		}
+
+		switch v := value.(type) {
+		case int64, uint64, complex128:
+			as.Equalf(v, expected, "the value of colname %s isn't valid", colName)
+		case float64:
+			// float is special case. bad rounded.
+			as.Equalf(
+				float32(v),
+				expected,
+				"the value of colname %s isn't valid",
+				colName,
+			)
+		default:
+			as.FailNow("type not found")
+		}
+	}
+
+	// error invalid column
+	value, err = df.Min("invalid")
+	as.Nil(value, "there is an error, value must be nil")
+	as.Equal(
+		err.Error(),
+		"column invalid not found",
+		"the error message does not match",
+	)
+}
