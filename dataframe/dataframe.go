@@ -143,12 +143,6 @@ func (df *DataFrame) checkRange(min, max int) error {
 		return fmt.Errorf("max index < min index")
 	}
 
-	lenn := df.NumberRows()
-
-	if min > lenn || max > lenn {
-		return fmt.Errorf("index out of range")
-	}
-
 	return nil
 }
 

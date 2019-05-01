@@ -169,6 +169,28 @@ func Test_Current_func(t *testing.T) {
 	as.Nil(row.df, "the iterator has reached to the end. The row should be null")
 	row = iterator.Current()
 	as.Nil(row.df, "the iterator has reached to the end. The row should be null")
+
+
+	// checking with a range is greater than the rows number.
+	if iterator = makeIterator(df, 0, 1000, t); iterator == nil {
+		return
+	}
+
+	for i, dataRow := range data {
+		row := iterator.Current()
+		c, _ := row.Cell("a")
+		a, _ := c.Int()
+		as.Equalf(a, dataRow.A, "the position %d, column a does not match", i)
+		c, _ = row.Cell("b")
+		b, _ := c.Int()
+		as.Equalf(b, dataRow.B, "the position %d, column b does not match", i)
+		iterator.Next()
+	}
+
+	row = iterator.Current()
+	as.Nil(row.df, "the iterator has reached to the end. The row should be null")
+	row = iterator.Current()
+	as.Nil(row.df, "the iterator has reached to the end. The row should be null")
 }
 
 func Test_Position_func(t *testing.T) {

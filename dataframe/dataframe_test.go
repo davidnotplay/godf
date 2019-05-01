@@ -97,12 +97,6 @@ func Test_DataFrame_checkRange(t *testing.T) {
 	err = df.checkRange(3, 0)
 	as.Equal("max index < min index", err.Error(), "error message is different")
 
-	// range index > data length
-	err = df.checkRange(0, dlen+1)
-	as.Equal("index out of range", err.Error(), "error message is different")
-	err = df.checkRange(dlen+1, dlen+2)
-	as.Equal("index out of range", err.Error(), "error message is different")
-
 	// valid ranges
 	err = df.checkRange(0, 0)
 	if err != nil {

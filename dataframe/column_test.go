@@ -190,11 +190,6 @@ func Test_DataFrame_ColumnRange_func(t *testing.T) {
 	values, err = df.ColumnRange("invalid", 1, 2)
 	as.Nil(values, "values must be null because the column invalid is not exists")
 	as.Equal("column invalid not found", err.Error(), "error message does not match")
-
-	// invalid range
-	values, err = df.ColumnRange("a", 3, 1000)
-	as.Nil(values, "values must be null because the column invalid is not exists")
-	as.Equal("index out of range", err.Error(), "error message does not match")
 }
 
 
