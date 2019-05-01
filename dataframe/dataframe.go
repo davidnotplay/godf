@@ -166,35 +166,6 @@ func (df *DataFrame) NumberRows() int {
 	return df.handler.Len()
 }
 
-// Column returns the values of a DataFrame column in an array.
-// Returns an error if the column does not exists.
-func (df *DataFrame) Column(colname string) ([]Value, error) {
-	return df.ColumnRange(colname, 0, df.NumberRows())
-}
-
-// ColumnRange returns a values range of a DataFrame column in an array.
-// Returns an error if the column does not exists or the range index is invalid.
-func (df *DataFrame) ColumnRange(colname string, min, max int) ([]Value, error) {
-	// Check if column colname exists.
-	if _, ok := df.cIndexByName[colname]; !ok {
-		return nil, fmt.Errorf("column %s not found", colname)
-	}
-
-	iterator, err := df.IteratorRange(min, max)
-	if err != nil {
-		// invalid range index.
-		return nil, err
-	}
-
-	var values []Value
-	for row, cont := iterator.Next(); cont; row, cont = iterator.Next() {
-		value, _ := row.Cell(colname)
-		values = append(values, value)
-	}
-
-	return values, nil
-}
-
 // Iterator returns a Iterator to access the data rows sequentially.
 func (df *DataFrame) Iterator() *Iterator {
 	iterator, _ := df.IteratorRange(0, df.NumberRows())
